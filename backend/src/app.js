@@ -36,7 +36,10 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "EventFlow API is running"
+    message: "EventFlow API is running",
+    environment: config.nodeEnv,
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
   });
 });
 
