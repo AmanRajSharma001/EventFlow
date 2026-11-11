@@ -29,30 +29,44 @@ Preview interactions do not create server-side accounts or event registrations.
 
 ### Backend
 
-- Node.js and Express 5
-- Zod request validation
+- Node.js and Express 5 (ES modules)
+- Zod request validation and role enforcement
 - CORS and JSON request parsing
-- `bcrypt`, `jsonwebtoken`, and `dotenv` are listed as dependencies, but the current API code does not yet implement database-backed authentication or load backend environment variables.
-
-There is no database or Prisma schema in the current repository.
+- Centralized error handling and 404 middleware
+- `bcrypt` password hashing and verification
+- `jsonwebtoken` generation and authentication middleware
+- Role-based authorization middleware (STUDENT, ORGANIZER, ADMIN)
+- Automated test suite using Node.js test runner (`node --test`)
+- Configurable environment via `dotenv`
+- Database abstraction ready for Sagar's PostgreSQL and Prisma integration
 
 ## Project structure
 
 ```text
 EventFlow/
 ├── backend/
-│   ├── index.js
+│   ├── .env.example
 │   ├── package.json
 │   ├── package-lock.json
 │   └── src/
 │       ├── app.js
 │       ├── server.js
+│       ├── config/
+│       │   ├── env.js
+│       │   └── prisma.js
 │       ├── controllers/
 │       │   └── auth.controller.js
 │       ├── middleware/
+│       │   ├── auth.middleware.js
+│       │   ├── error.middleware.js
 │       │   └── validate.middleware.js
 │       ├── routes/
 │       │   └── auth.routes.js
+│       ├── test/
+│       │   └── auth.test.js
+│       ├── utils/
+│       │   ├── jwt.js
+│       │   └── password.js
 │       └── validators/
 │           └── auth.validator.js
 ├── frontend/
@@ -124,13 +138,29 @@ Open the local URL printed by Vite. The public preview can also run without the 
 
 ## Environment variables
 
-The frontend API client reads `VITE_API_BASE_URL`. The checked-in `frontend/.env.example` currently points to `http://localhost:5000/api`, while the backend server currently listens on port `3000`. If you want the frontend API client to target this local backend, create `frontend/.env` and set:
+Both frontend and backend support environment variable configuration:
+
+### Backend
+
+Create `backend/.env` based on `backend/.env.example`:
 
 ```dotenv
-VITE_API_BASE_URL=http://localhost:3000/api
+PORT=5000
+NODE_ENV=development
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRES_IN=7d
+CORS_ORIGIN=http://localhost:5173
 ```
 
-Vite variables are included in client-side code. Do not place secrets, private API keys, or credentials in `VITE_*` variables. The current backend does not read environment variables; its port is hard-coded in `backend/src/server.js`.
+### Frontend
+
+The frontend API client reads `VITE_API_BASE_URL` (defaults to `http://localhost:5000/api`). If you want to customize the API base URL, create `frontend/.env`:
+
+```dotenv
+VITE_API_BASE_URL=http://localhost:5000/api
+```
+
+Vite variables are included in client-side code. Do not place secrets, private API keys, or credentials in `VITE_*` variables.
 
 ## Development commands
 
@@ -144,17 +174,18 @@ Run commands from the relevant package directory.
 | `frontend/` | `npm run preview` | Serve the built frontend locally. Run `npm run build` first. |
 | `backend/` | `npm run dev` | Start the API with nodemon. |
 | `backend/` | `npm start` | Start the API with Node.js. |
+| `backend/` | `npm test` | Run the automated test suite with Node.js test runner. |
 
 ## API
 
-The repository does not contain an OpenAPI/Swagger specification. The following endpoints are present in the Express source:
+The following endpoints are implemented in the Express backend:
 
-| Method | Path | Current behavior |
-| --- | --- | --- |
-| `GET` | `/api/health` | Returns a JSON health response with `success: true` and `message: "EventFlow API is running"`. |
-| `POST` | `/api/auth/register` | Validates the request body, then currently returns HTTP `501` because registration is not implemented. |
-
-The registration request accepts `name` (at least 2 characters), a valid `email`, `password` (at least 8 characters), and an optional `role` of `STUDENT`, `ORGANIZER`, or `ADMIN`. Invalid input returns HTTP `400` with validation errors. A valid request is not persisted and receives a `501` response. A login validation schema exists, but there is currently no login API route.
+| Method | Path | Description | Access |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | Service health check with status, uptime, environment, and timestamp. | Public |
+| `POST` | `/api/auth/register` | Validates input (Zod), hashes password (bcrypt), enforces default STUDENT role, blocks privilege escalation, and checks DB readiness. | Public |
+| `POST` | `/api/auth/login` | Validates credentials (Zod), compares password hash (bcrypt), verifies DB readiness, and issues signed JWT. | Public |
+| `GET` | `/api/auth/me` | Returns the authenticated user's safe profile (never exposes password). | Protected (`Bearer <token>`) |
 
 ## Current status and limitations
 
