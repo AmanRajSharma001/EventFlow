@@ -40,3 +40,28 @@ export const authenticate = (req, res, next) => {
     });
   }
 };
+
+/**
+ * Role-based authorization middleware
+ * Ensures the authenticated user possesses one of the required roles
+ * @param {...string} allowedRoles - Allowed user roles (e.g. "ADMIN", "ORGANIZER", "STUDENT")
+ */
+export const authorizeRoles = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user || !req.user.role) {
+      return res.status(401).json({
+        success: false,
+        message: "User authentication required before role authorization"
+      });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Forbidden: Access requires one of the following roles: ${allowedRoles.join(", ")}`
+      });
+    }
+
+    return next();
+  };
+};
