@@ -201,3 +201,231 @@ export const createEvent = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateEvent = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (isDatabaseReady() && prisma?.event) {
+      const event = await prisma.event.findUnique({
+        where: { id },
+        include: {
+          _count: {
+            select: { registrations: true }
+          }
+        }
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: `Event not found with ID: ${id}`
+        });
+      }
+
+      const isOwner = req.user.id === event.organizerId;
+      const isAdmin = req.user.role === ROLES.ADMIN;
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You are not authorized to update this event"
+        });
+      }
+
+      if (event.status === EVENT_STATUS.COMPLETED || event.status === EVENT_STATUS.CANCELLED) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot update an event that is already ${event.status.toLowerCase()}`
+        });
+      }
+
+      if (updates.capacity && updates.capacity < event._count.registrations) {
+        return res.status(400).json({
+          success: false,
+          message: `Capacity cannot be reduced below the current registration count of ${event._count.registrations}`
+        });
+      }
+
+      const updatedData = { ...updates };
+      if (updates.startDate) updatedData.startDate = new Date(updates.startDate);
+      if (updates.endDate) updatedData.endDate = new Date(updates.endDate);
+      if (updates.registrationDeadline) updatedData.registrationDeadline = new Date(updates.registrationDeadline);
+
+      const updatedEvent = await prisma.event.update({
+        where: { id },
+        data: updatedData
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Event updated successfully",
+        data: { event: updatedEvent }
+      });
+    }
+
+    return res.status(503).json({
+      success: false,
+      message: "Event update validated, but awaiting database integration with Sagar's Prisma setup.",
+      dependency: {
+        status: "pending_database_integration",
+        teammate: "Sagar",
+        required: "PostgreSQL database connection and Prisma Event model schema"
+      },
+      data: { id, updates }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteEvent = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (isDatabaseReady() && prisma?.event) {
+      const event = await prisma.event.findUnique({
+        where: { id },
+        include: {
+          _count: {
+            select: { registrations: true }
+          }
+        }
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: `Event not found with ID: ${id}`
+        });
+      }
+
+      const isOwner = req.user.id === event.organizerId;
+      const isAdmin = req.user.role === ROLES.ADMIN;
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You are not authorized to delete this event"
+        });
+      }
+
+      if (event._count.registrations > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot delete event with active student registrations. Cancel the event instead."
+        });
+      }
+
+      await prisma.event.delete({
+        where: { id }
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Event deleted successfully"
+      });
+    }
+
+    return res.status(503).json({
+      success: false,
+      message: "Event deletion requested, but awaiting database integration with Sagar's Prisma setup.",
+      dependency: {
+        status: "pending_database_integration",
+        teammate: "Sagar",
+        required: "PostgreSQL database connection and Prisma Event model schema"
+      },
+      data: { id }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const publishEvent = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (isDatabaseReady() && prisma?.event) {
+      const event = await prisma.event.findUnique({
+        where: { id }
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: `Event not found with ID: ${id}`
+        });
+      }
+
+      const isOwner = req.user.id === event.organizerId;
+      const isAdmin = req.user.role === ROLES.ADMIN;
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You are not authorized to publish this event"
+        });
+      }
+
+      if (event.status === EVENT_STATUS.PUBLISHED) {
+        return res.status(400).json({
+          success: false,
+          message: "Event is already published"
+        });
+      }
+
+      if (event.status === EVENT_STATUS.COMPLETED || event.status === EVENT_STATUS.CANCELLED) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot publish an event that is ${event.status.toLowerCase()}`
+        });
+      }
+
+      if (!event.title || !event.description || !event.location || !event.capacity || event.capacity <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot publish incomplete event. Title, description, location and positive capacity are required"
+        });
+      }
+
+      if (new Date(event.startDate) <= new Date()) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot publish event with a past start date"
+        });
+      }
+
+      const publishedEvent = await prisma.event.update({
+        where: { id },
+        data: {
+          status: EVENT_STATUS.PUBLISHED,
+          publishedAt: new Date()
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Event published successfully",
+        data: { event: publishedEvent }
+      });
+    }
+
+    return res.status(503).json({
+      success: false,
+      message: "Event publishing requested, but awaiting database integration with Sagar's Prisma setup.",
+      dependency: {
+        status: "pending_database_integration",
+        teammate: "Sagar",
+        required: "PostgreSQL database connection and Prisma Event model schema"
+      },
+      data: {
+        id,
+        targetStatus: EVENT_STATUS.PUBLISHED
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
