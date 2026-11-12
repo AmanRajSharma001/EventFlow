@@ -149,6 +149,26 @@ model Registration {
   // Relational link to the registered Event record
   event        Event              @relation(fields: [eventId], references: [id])
 
+  // One-to-one relation: an optional check-in record when the student attends
+  attendance   Attendance?
+
   // Compound unique constraint stops a student from registering twice for the same event
   @@unique([studentId, eventId])
+}
+
+// Attendance model records physical check-in at an event venue.
+// It tracks when the student scanned their ticket/QR code to enter.
+model Attendance {
+  // Primary key using UUID for unique check-in identification
+  id             String       @id @default(uuid())
+
+  // Foreign key referencing the registration; @unique ensures one registration can only be checked in once
+  registrationId String       @unique
+
+  // Timestamp when the student arrived and was checked in
+  checkedInAt    DateTime     @default(now())
+
+  // One-to-one relation linking back to the Registration.
+  // onDelete: Cascade ensures deleting a registration cleans up its attendance check-in
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
 }
