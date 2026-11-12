@@ -8,7 +8,6 @@ const app = express();
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (such as mobile apps, curl, or Postman)
     if (!origin) return callback(null, true);
 
     const allowedOrigins = [
@@ -23,7 +22,7 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    return callback(null, true); // Permissive in development
+    return callback(null, true);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

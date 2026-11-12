@@ -1,10 +1,5 @@
 import { verifyToken } from "../utils/jwt.js";
 
-/**
- * Authentication middleware
- * Verifies JWT token from Authorization Bearer header
- * Attaches decoded user info to req.user
- */
 export const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -41,11 +36,6 @@ export const authenticate = (req, res, next) => {
   }
 };
 
-/**
- * Role-based authorization middleware
- * Ensures the authenticated user possesses one of the required roles
- * @param {...string} allowedRoles - Allowed user roles (e.g. "ADMIN", "ORGANIZER", "STUDENT")
- */
 export const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user || !req.user.role) {
@@ -64,4 +54,24 @@ export const authorizeRoles = (...allowedRoles) => {
 
     return next();
   };
+};
+
+export const optionalAuthenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return next();
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = verifyToken(token);
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+      name: decoded.name
+    };
+  } catch {}
+
+  return next();
 };

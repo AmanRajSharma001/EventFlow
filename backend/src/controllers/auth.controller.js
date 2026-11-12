@@ -3,21 +3,12 @@ import { hashPassword, comparePassword } from "../utils/password.js";
 import { generateToken } from "../utils/jwt.js";
 import { ROLES } from "../validators/auth.validator.js";
 
-/**
- * Register a new user
- * POST /api/auth/register
- */
 export const register = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
-
-    // Enforce STUDENT role for public registration
     const assignedRole = role || ROLES.STUDENT;
-
-    // Hash the password using bcrypt
     const hashedPassword = await hashPassword(password);
 
-    // If Sagar's database setup is ready, persist user to PostgreSQL via Prisma
     if (isDatabaseReady() && prisma?.user) {
       const existingUser = await prisma.user.findUnique({
         where: { email }
@@ -63,7 +54,6 @@ export const register = async (req, res, next) => {
       });
     }
 
-    // When Prisma / PostgreSQL database is not yet ready, document dependency clearly
     return res.status(503).json({
       success: false,
       message: "Registration validated and password hashed, but awaiting database integration with Sagar's Prisma setup.",
@@ -83,15 +73,10 @@ export const register = async (req, res, next) => {
   }
 };
 
-/**
- * Login user and issue JWT
- * POST /api/auth/login
- */
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // If Sagar's database setup is ready, query PostgreSQL via Prisma
     if (isDatabaseReady() && prisma?.user) {
       const user = await prisma.user.findUnique({
         where: { email }
@@ -134,7 +119,6 @@ export const login = async (req, res, next) => {
       });
     }
 
-    // When Prisma / PostgreSQL database is not yet ready, document dependency clearly
     return res.status(503).json({
       success: false,
       message: "Login credentials validated, but awaiting database integration with Sagar's Prisma setup.",
@@ -149,10 +133,6 @@ export const login = async (req, res, next) => {
   }
 };
 
-/**
- * Get current authenticated user profile
- * GET /api/auth/me
- */
 export const getMe = async (req, res, next) => {
   try {
     if (!req.user) {
