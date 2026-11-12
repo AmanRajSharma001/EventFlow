@@ -1,0 +1,12 @@
+// This is the Prisma schema file for EventFlow.
+// It defines the database structure and how the client is generated.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../generated/prisma"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
