@@ -4,7 +4,8 @@ import { ROLES } from "../validators/auth.validator.js";
 
 export const getEvents = async (req, res, next) => {
   try {
-    const { search, category, status, page = 1, limit = 10, mine } = req.query;
+    const query = req.validatedQuery || req.query;
+    const { search, category, status, page = 1, limit = 10, mine } = query;
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
     const skip = (pageNum - 1) * limitNum;
