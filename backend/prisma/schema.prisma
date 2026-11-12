@@ -33,43 +33,54 @@ enum EventStatus {
   COMPLETED
 }
 
+// RegistrationStatus enum tracks whether an enrollment is active or cancelled.
+// - REGISTERED: Student is confirmed to attend the event.
+// - CANCELLED: Student withdrew or organizer cancelled; status changes instead of deleting the row.
+enum RegistrationStatus {
+  REGISTERED
+  CANCELLED
+}
+
 // User model represents college students, club organizers, and administrators.
 model User {
   // Primary key using a universally unique identifier (UUID) to avoid ID collisions
-  id        String   @id @default(uuid())
+  id            String         @id @default(uuid())
 
   // Full name of the user
-  name      String
+  name          String
 
   // Unique email address used for logging in; @unique stops duplicate accounts
-  email     String   @unique
+  email         String         @unique
 
   // Stores the bcrypt HASH of the user password (named "password" because Aman's controller uses it)
-  password  String
+  password      String
 
   // Role assigned to the user; defaults to STUDENT for public registrations
-  role      Role     @default(STUDENT)
+  role          Role           @default(STUDENT)
 
   // One-to-many relation: one user (an organizer) can create multiple events
-  events    Event[]
+  events        Event[]
+
+  // One-to-many relation: one student can register for multiple events
+  registrations Registration[]
 
   // Timestamp when the account was first created in the database
-  createdAt DateTime @default(now())
+  createdAt     DateTime       @default(now())
 
   // Timestamp automatically updated whenever the user record is modified
-  updatedAt DateTime @updatedAt
+  updatedAt     DateTime       @updatedAt
 }
 
 // Event model represents college workshops, fests, hackathons, and competitions.
 model Event {
   // Primary key using UUID for unique identification
-  id                   String      @id @default(uuid())
+  id                   String         @id @default(uuid())
 
   // Name or title of the event
   title                String
 
   // Detailed description of the event; @db.Text allows unlimited length text in PostgreSQL
-  description          String      @db.Text
+  description          String         @db.Text
 
   // Physical location or hall on campus where the event will take place
   venue                String
@@ -93,17 +104,51 @@ model Event {
   capacity             Int
 
   // Current status of the event in its lifecycle; defaults to DRAFT
-  status               EventStatus @default(DRAFT)
+  status               EventStatus    @default(DRAFT)
 
   // Foreign key referencing the User who organized this event
   organizerId          String
 
   // Relational link to the User model; enables querying event organizer details
-  organizer            User        @relation(fields: [organizerId], references: [id])
+  organizer            User           @relation(fields: [organizerId], references: [id])
+
+  // One-to-many relation: one event can have many student registrations
+  registrations        Registration[]
 
   // Timestamp when the event was created in the database
-  createdAt            DateTime    @default(now())
+  createdAt            DateTime       @default(now())
 
   // Timestamp automatically updated whenever event details change
-  updatedAt            DateTime    @updatedAt
+  updatedAt            DateTime       @updatedAt
+}
+
+// Registration model acts as a junction table between Student (User) and Event.
+// It stores attendance details, tickets, and verification tokens.
+model Registration {
+  // Primary key using UUID for unique registration ticket identification
+  id           String             @id @default(uuid())
+
+  // Foreign key referencing the student who registered
+  studentId    String
+
+  // Foreign key referencing the event being registered for
+  eventId      String
+
+  // Unique QR token generated per registration for fast on-campus scanning and ticket check-in
+  qrToken      String             @unique @default(uuid())
+
+  // Status of the registration; cancelling changes status instead of deleting the row to preserve history
+  status       RegistrationStatus @default(REGISTERED)
+
+  // Timestamp when the student submitted their registration
+  registeredAt DateTime           @default(now())
+
+  // Relational link to the student User record
+  student      User               @relation(fields: [studentId], references: [id])
+
+  // Relational link to the registered Event record
+  event        Event              @relation(fields: [eventId], references: [id])
+
+  // Compound unique constraint stops a student from registering twice for the same event
+  @@unique([studentId, eventId])
 }
