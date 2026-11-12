@@ -1,5 +1,5 @@
 // This is the Prisma schema file for EventFlow.
-// It defines the database structure and how the client is generated.
+// It defines the database tables, relations, and generators.
 
 generator client {
   provider            = "prisma-client"
@@ -9,4 +9,38 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// Role enum restricts user types to three fixed options in the system.
+// - STUDENT: Can view events and register for them.
+// - ORGANIZER: Can create and manage their own events.
+// - ADMIN: Can manage all users, organizers, and events across the college.
+enum Role {
+  STUDENT
+  ORGANIZER
+  ADMIN
+}
+
+// User model represents college students, club organizers, and administrators.
+model User {
+  // Primary key using a universally unique identifier (UUID) to avoid ID collisions
+  id        String   @id @default(uuid())
+
+  // Full name of the user
+  name      String
+
+  // Unique email address used for logging in; @unique stops duplicate accounts
+  email     String   @unique
+
+  // Stores the bcrypt HASH of the user password (named "password" because Aman's controller uses it)
+  password  String
+
+  // Role assigned to the user; defaults to STUDENT for public registrations
+  role      Role     @default(STUDENT)
+
+  // Timestamp when the account was first created in the database
+  createdAt DateTime @default(now())
+
+  // Timestamp automatically updated whenever the user record is modified
+  updatedAt DateTime @updatedAt
 }
