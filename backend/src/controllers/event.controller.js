@@ -429,3 +429,127 @@ export const publishEvent = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getOrganizerEvents = async (req, res, next) => {
+  try {
+    const organizerId = req.user.id;
+
+    if (isDatabaseReady() && prisma?.event) {
+      const events = await prisma.event.findMany({
+        where: { organizerId },
+        orderBy: { createdAt: "desc" },
+        include: {
+          _count: {
+            select: { registrations: true }
+          }
+        }
+      });
+
+      const metrics = {
+        totalEvents: events.length,
+        draftEvents: events.filter((e) => e.status === EVENT_STATUS.DRAFT).length,
+        publishedEvents: events.filter((e) => e.status === EVENT_STATUS.PUBLISHED).length,
+        totalRegistrations: events.reduce((sum, e) => sum + e._count.registrations, 0)
+      };
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          metrics,
+          events
+        }
+      });
+    }
+
+    return res.status(503).json({
+      success: false,
+      message: "Organizer events query is awaiting database integration with Sagar's Prisma setup.",
+      dependency: {
+        status: "pending_database_integration",
+        teammate: "Sagar",
+        required: "PostgreSQL database connection and Prisma Event model schema"
+      },
+      data: { organizerId }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getEventStats = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (isDatabaseReady() && prisma?.event && prisma?.registration) {
+      const event = await prisma.event.findUnique({
+        where: { id },
+        include: {
+          registrations: {
+            select: {
+              status: true,
+              department: true,
+              createdAt: true
+            }
+          }
+        }
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: `Event not found with ID: ${id}`
+        });
+      }
+
+      const isOwner = req.user.id === event.organizerId;
+      const isAdmin = req.user.role === ROLES.ADMIN;
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You are not authorized to view statistics for this event"
+        });
+      }
+
+      const confirmed = event.registrations.filter((r) => r.status === "CONFIRMED").length;
+      const cancelled = event.registrations.filter((r) => r.status === "CANCELLED").length;
+      const capacityRemaining = Math.max(0, event.capacity - confirmed);
+      const capacityFilledPercent = Math.min(100, Math.round((confirmed / event.capacity) * 100));
+
+      const departmentBreakdown = {};
+      for (const reg of event.registrations) {
+        if (reg.status === "CONFIRMED" && reg.department) {
+          departmentBreakdown[reg.department] = (departmentBreakdown[reg.department] || 0) + 1;
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          eventId: event.id,
+          title: event.title,
+          status: event.status,
+          capacity: event.capacity,
+          confirmedRegistrations: confirmed,
+          cancelledRegistrations: cancelled,
+          capacityRemaining,
+          capacityFilledPercent,
+          departmentBreakdown
+        }
+      });
+    }
+
+    return res.status(503).json({
+      success: false,
+      message: "Event statistics query is awaiting database integration with Sagar's Prisma setup.",
+      dependency: {
+        status: "pending_database_integration",
+        teammate: "Sagar",
+        required: "PostgreSQL database connection and Prisma Event/Registration model schemas"
+      },
+      data: { id }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

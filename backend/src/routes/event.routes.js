@@ -5,7 +5,9 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
-  publishEvent
+  publishEvent,
+  getOrganizerEvents,
+  getEventStats
 } from "../controllers/event.controller.js";
 import {
   registerForEvent,
@@ -24,6 +26,8 @@ import { ROLES } from "../validators/auth.validator.js";
 const router = Router();
 
 router.get("/", optionalAuthenticate, validateQuery(eventQuerySchema), getEvents);
+router.get("/organizer/my", authenticate, authorizeRoles(ROLES.ORGANIZER, ROLES.ADMIN), getOrganizerEvents);
+router.get("/:id/stats", authenticate, authorizeRoles(ROLES.ORGANIZER, ROLES.ADMIN), getEventStats);
 router.get("/:id", optionalAuthenticate, getEventById);
 router.post("/", authenticate, authorizeRoles(ROLES.ORGANIZER, ROLES.ADMIN), validate(createEventSchema), createEvent);
 router.patch("/:id", authenticate, authorizeRoles(ROLES.ORGANIZER, ROLES.ADMIN), validate(updateEventSchema), updateEvent);
