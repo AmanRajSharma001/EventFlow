@@ -44,113 +44,119 @@ enum RegistrationStatus {
 // User model represents college students, club organizers, and administrators.
 model User {
   // Primary key using a universally unique identifier (UUID) to avoid ID collisions
-  id            String         @id @default(uuid())
+  id String @id @default(uuid())
 
   // Full name of the user
-  name          String
+  name String
 
   // Unique email address used for logging in; @unique stops duplicate accounts
-  email         String         @unique
+  email String @unique
 
   // Stores the bcrypt HASH of the user password (named "password" because Aman's controller uses it)
-  password      String
+  password String
 
   // Role assigned to the user; defaults to STUDENT for public registrations
-  role          Role           @default(STUDENT)
+  role Role @default(STUDENT)
 
   // One-to-many relation: one user (an organizer) can create multiple events
-  events        Event[]
+  events Event[]
 
   // One-to-many relation: one student can register for multiple events
   registrations Registration[]
 
+  // One-to-many relation: one user (organizer or admin) can post multiple announcements
+  announcements Announcement[]
+
   // Timestamp when the account was first created in the database
-  createdAt     DateTime       @default(now())
+  createdAt DateTime @default(now())
 
   // Timestamp automatically updated whenever the user record is modified
-  updatedAt     DateTime       @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 // Event model represents college workshops, fests, hackathons, and competitions.
 model Event {
   // Primary key using UUID for unique identification
-  id                   String         @id @default(uuid())
+  id String @id @default(uuid())
 
   // Name or title of the event
-  title                String
+  title String
 
   // Detailed description of the event; @db.Text allows unlimited length text in PostgreSQL
-  description          String         @db.Text
+  description String @db.Text
 
   // Physical location or hall on campus where the event will take place
-  venue                String
+  venue String
 
   // Optional category grouping (e.g., Technical, Cultural, Sports, Workshops)
-  category             String?
+  category String?
 
   // Optional URL pointing to the event banner or cover image
-  imageUrl             String?
+  imageUrl String?
 
   // Start date and time of the event
-  startDate            DateTime
+  startDate DateTime
 
   // End date and time of the event
-  endDate              DateTime
+  endDate DateTime
 
   // Cut-off date and time after which registrations are closed
   registrationDeadline DateTime
 
   // Maximum number of participants who can attend
-  capacity             Int
+  capacity Int
 
   // Current status of the event in its lifecycle; defaults to DRAFT
-  status               EventStatus    @default(DRAFT)
+  status EventStatus @default(DRAFT)
 
   // Foreign key referencing the User who organized this event
-  organizerId          String
+  organizerId String
 
   // Relational link to the User model; enables querying event organizer details
-  organizer            User           @relation(fields: [organizerId], references: [id])
+  organizer User @relation(fields: [organizerId], references: [id])
 
   // One-to-many relation: one event can have many student registrations
-  registrations        Registration[]
+  registrations Registration[]
+
+  // One-to-many relation: one event can have multiple updates or announcements
+  announcements Announcement[]
 
   // Timestamp when the event was created in the database
-  createdAt            DateTime       @default(now())
+  createdAt DateTime @default(now())
 
   // Timestamp automatically updated whenever event details change
-  updatedAt            DateTime       @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 // Registration model acts as a junction table between Student (User) and Event.
 // It stores attendance details, tickets, and verification tokens.
 model Registration {
   // Primary key using UUID for unique registration ticket identification
-  id           String             @id @default(uuid())
+  id String @id @default(uuid())
 
   // Foreign key referencing the student who registered
-  studentId    String
+  studentId String
 
   // Foreign key referencing the event being registered for
-  eventId      String
+  eventId String
 
   // Unique QR token generated per registration for fast on-campus scanning and ticket check-in
-  qrToken      String             @unique @default(uuid())
+  qrToken String @unique @default(uuid())
 
   // Status of the registration; cancelling changes status instead of deleting the row to preserve history
-  status       RegistrationStatus @default(REGISTERED)
+  status RegistrationStatus @default(REGISTERED)
 
   // Timestamp when the student submitted their registration
-  registeredAt DateTime           @default(now())
+  registeredAt DateTime @default(now())
 
   // Relational link to the student User record
-  student      User               @relation(fields: [studentId], references: [id])
+  student User @relation(fields: [studentId], references: [id])
 
   // Relational link to the registered Event record
-  event        Event              @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
 
   // One-to-one relation: an optional check-in record when the student attends
-  attendance   Attendance?
+  attendance Attendance?
 
   // Compound unique constraint stops a student from registering twice for the same event
   @@unique([studentId, eventId])
@@ -160,15 +166,46 @@ model Registration {
 // It tracks when the student scanned their ticket/QR code to enter.
 model Attendance {
   // Primary key using UUID for unique check-in identification
-  id             String       @id @default(uuid())
+  id String @id @default(uuid())
 
   // Foreign key referencing the registration; @unique ensures one registration can only be checked in once
-  registrationId String       @unique
+  registrationId String @unique
 
   // Timestamp when the student arrived and was checked in
-  checkedInAt    DateTime     @default(now())
+  checkedInAt DateTime @default(now())
 
   // One-to-one relation linking back to the Registration.
   // onDelete: Cascade ensures deleting a registration cleans up its attendance check-in
-  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+}
+
+// Announcement model represents updates, notifications, and alerts posted for an event.
+model Announcement {
+  // Primary key using UUID for unique announcement identification
+  id String @id @default(uuid())
+
+  // Foreign key referencing the event this announcement belongs to
+  eventId String
+
+  // Foreign key referencing the user (organizer or admin) who created this announcement
+  creatorId String
+
+  // Short headline or subject of the announcement
+  title String
+
+  // Detailed announcement message; @db.Text supports long formatted text
+  message String @db.Text
+
+  // Timestamp when the announcement was posted
+  createdAt DateTime @default(now())
+
+  // Timestamp automatically updated when announcement content is edited
+  updatedAt DateTime @updatedAt
+
+  // Relational link to the Event.
+  // onDelete: Cascade ensures announcements are removed if the event is deleted
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  // Relational link to the User who authored the announcement
+  creator User @relation(fields: [creatorId], references: [id])
 }
