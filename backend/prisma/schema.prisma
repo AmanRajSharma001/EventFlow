@@ -21,6 +21,18 @@ enum Role {
   ADMIN
 }
 
+// EventStatus enum tracks the lifecycle of an event.
+// - DRAFT: Created by organizer but not yet visible to students.
+// - PUBLISHED: Live and open for students to view and register.
+// - CANCELLED: Event was called off by the organizer or college.
+// - COMPLETED: Event has taken place and ended.
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
 // User model represents college students, club organizers, and administrators.
 model User {
   // Primary key using a universally unique identifier (UUID) to avoid ID collisions
@@ -38,9 +50,60 @@ model User {
   // Role assigned to the user; defaults to STUDENT for public registrations
   role      Role     @default(STUDENT)
 
+  // One-to-many relation: one user (an organizer) can create multiple events
+  events    Event[]
+
   // Timestamp when the account was first created in the database
   createdAt DateTime @default(now())
 
   // Timestamp automatically updated whenever the user record is modified
   updatedAt DateTime @updatedAt
+}
+
+// Event model represents college workshops, fests, hackathons, and competitions.
+model Event {
+  // Primary key using UUID for unique identification
+  id                   String      @id @default(uuid())
+
+  // Name or title of the event
+  title                String
+
+  // Detailed description of the event; @db.Text allows unlimited length text in PostgreSQL
+  description          String      @db.Text
+
+  // Physical location or hall on campus where the event will take place
+  venue                String
+
+  // Optional category grouping (e.g., Technical, Cultural, Sports, Workshops)
+  category             String?
+
+  // Optional URL pointing to the event banner or cover image
+  imageUrl             String?
+
+  // Start date and time of the event
+  startDate            DateTime
+
+  // End date and time of the event
+  endDate              DateTime
+
+  // Cut-off date and time after which registrations are closed
+  registrationDeadline DateTime
+
+  // Maximum number of participants who can attend
+  capacity             Int
+
+  // Current status of the event in its lifecycle; defaults to DRAFT
+  status               EventStatus @default(DRAFT)
+
+  // Foreign key referencing the User who organized this event
+  organizerId          String
+
+  // Relational link to the User model; enables querying event organizer details
+  organizer            User        @relation(fields: [organizerId], references: [id])
+
+  // Timestamp when the event was created in the database
+  createdAt            DateTime    @default(now())
+
+  // Timestamp automatically updated whenever event details change
+  updatedAt            DateTime    @updatedAt
 }
