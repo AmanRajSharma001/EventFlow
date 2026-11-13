@@ -9,7 +9,8 @@
     "test": "node --test src/test/auth.test.js",
     "db:check": "node scripts/db-check.js",
     "db:generate": "prisma generate",
-    "db:validate": "prisma validate"
+    "db:validate": "prisma validate",
+    "db:seed": "node scripts/seed.js"
   },
   "keywords": [],
   "author": "",
