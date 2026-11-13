@@ -1,4 +1,8 @@
 import api from './api';
+import {
+  adaptRegistration,
+  adaptRegistrationsList,
+} from './adapters/registrationAdapter';
 
 /**
  * Event Registration API Service.
@@ -14,7 +18,7 @@ export const registrationsService = {
    */
   async registerForEvent(eventId, details = {}) {
     const response = await api.post(`/events/${eventId}/register`, details);
-    return response.data?.data?.registration || response.data?.data;
+    return adaptRegistration(response.data?.data?.registration || response.data?.data);
   },
 
   /**
@@ -24,7 +28,7 @@ export const registrationsService = {
    */
   async getMyRegistrations() {
     const response = await api.get('/registrations/my');
-    return response.data?.data?.registrations || [];
+    return adaptRegistrationsList(response.data?.data?.registrations || []);
   },
 
   /**
@@ -47,7 +51,7 @@ export const registrationsService = {
    */
   async cancelRegistration(registrationId, reason = 'Student voluntary cancellation') {
     const response = await api.patch(`/registrations/${registrationId}/cancel`, { reason });
-    return response.data?.data?.registration || response.data;
+    return adaptRegistration(response.data?.data?.registration || response.data);
   },
 
   /**
