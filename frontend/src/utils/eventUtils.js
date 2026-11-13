@@ -9,7 +9,8 @@ const EVENT_STATUS_VARIANTS = {
 
 export function isPastEvent(event) {
   if (!event) return false;
-  if (event.status === 'Completed') return true;
+  const normalizedStatus = String(event.status || '').toUpperCase();
+  if (normalizedStatus === 'COMPLETED') return true;
 
   if (!event.startDate) return Boolean(event.isPast);
 
@@ -39,7 +40,11 @@ export function getEventStatus(event) {
   const { maxSeats, seatsLeft, percentFilled } = getEventCapacity(event);
 
   if (isPastEvent(event)) return 'Past event';
-  if (event.status === 'Closed' || (maxSeats > 0 && seatsLeft === 0)) {
+  const normalizedStatus = String(event.status || '').toUpperCase();
+  if (
+    ['CLOSED', 'CANCELLED', 'COMPLETED'].includes(normalizedStatus) ||
+    (maxSeats > 0 && seatsLeft === 0)
+  ) {
     return 'Registration closed';
   }
   if (event.status === 'Filling Fast' || percentFilled >= 85) {
