@@ -10,7 +10,8 @@
     "db:check": "node scripts/db-check.js",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
-    "db:seed": "node scripts/seed.js"
+    "db:seed": "node scripts/seed.js",
+    "db:test": "node --test 'db-tests/*.test.js'"
   },
   "keywords": [],
   "author": "",
