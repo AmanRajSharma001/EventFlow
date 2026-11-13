@@ -100,6 +100,13 @@ model Event {
   // Optional URL pointing to the event banner or cover image
   imageUrl String?
 
+  // Display details shown on the event cards and pages in the frontend.
+  department String?
+  coordinator String?
+  featured Boolean @default(false)
+  price String @default("Free")
+  tags String[] @default([])
+
   // Start date and time of the event
   startDate DateTime
 
