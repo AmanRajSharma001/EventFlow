@@ -58,6 +58,12 @@ model User {
   // Role assigned to the user; defaults to STUDENT for public registrations
   role Role @default(STUDENT)
 
+  // Student profile details collected by the registration form. Optional so existing users and organizers are not affected.
+  rollNumber String?
+  department String?
+  semester String?
+  phone String?
+
   // One-to-many relation: one user (an organizer) can create multiple events
   events Event[]
 
