@@ -1,3 +1,5 @@
+import { mockCollegeEvents } from '../data/mockEvents';
+
 const EVENT_STATUS_VARIANTS = {
   'Past event': 'neutral',
   'Registration closed': 'neutral',
@@ -6,6 +8,7 @@ const EVENT_STATUS_VARIANTS = {
 };
 
 export function isPastEvent(event) {
+  if (!event) return false;
   if (event.status === 'Completed') return true;
 
   if (!event.startDate) return Boolean(event.isPast);
@@ -19,6 +22,7 @@ export function isPastEvent(event) {
 }
 
 export function getEventCapacity(event) {
+  if (!event) return { maxSeats: 0, attendeesCount: 0, seatsLeft: 0, percentFilled: 0 };
   const maxSeats = Math.max(0, Number(event.maxSeats) || 0);
   const attendees = Math.max(0, Number(event.attendeesCount) || 0);
   const attendeesCount = maxSeats ? Math.min(attendees, maxSeats) : attendees;
@@ -31,6 +35,7 @@ export function getEventCapacity(event) {
 }
 
 export function getEventStatus(event) {
+  if (!event) return 'Registration closed';
   const { maxSeats, seatsLeft, percentFilled } = getEventCapacity(event);
 
   if (isPastEvent(event)) return 'Past event';
@@ -49,6 +54,7 @@ export function getEventStatusVariant(status) {
 }
 
 export function matchesEventQuery(event, query) {
+  if (!event) return false;
   const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery) return true;
 
@@ -63,3 +69,23 @@ export function matchesEventQuery(event, query) {
 
   return searchableText.includes(normalizedQuery);
 }
+
+/**
+ * Returns the fallback event catalog, combining static mock events
+ * with any published events created by organizers in localStorage.
+ */
+export function getFallbackCatalogEvents() {
+  try {
+    const rawSaved = typeof window !== 'undefined' ? localStorage.getItem('eventflow_organizer_events') : null;
+    if (!rawSaved) return mockCollegeEvents;
+    const saved = JSON.parse(rawSaved);
+    if (!Array.isArray(saved)) return mockCollegeEvents;
+    const published = saved.filter((e) => e.status === 'PUBLISHED');
+    const existingIds = new Set(mockCollegeEvents.map((e) => e.id));
+    const uniqueSaved = published.filter((e) => !existingIds.has(e.id));
+    return [...mockCollegeEvents, ...uniqueSaved];
+  } catch {
+    return mockCollegeEvents;
+  }
+}
+
