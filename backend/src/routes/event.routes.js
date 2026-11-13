@@ -18,6 +18,7 @@ import {
   createAnnouncement,
   getEventAnnouncements
 } from "../controllers/announcement.controller.js";
+import { getEventDetailedStatistics } from "../controllers/analytics.controller.js";
 import {
   createEventSchema,
   updateEventSchema,
@@ -34,6 +35,7 @@ const router = Router();
 router.get("/", optionalAuthenticate, validateQuery(eventQuerySchema), getEvents);
 router.get("/organizer/my", authenticate, authorizeRoles(ROLES.ORGANIZER, ROLES.ADMIN), getOrganizerEvents);
 router.get("/:id/stats", authenticate, authorizeRoles(ROLES.ORGANIZER, ROLES.ADMIN), getEventStats);
+router.get("/:id/statistics", authenticate, authorizeRoles(ROLES.ORGANIZER, ROLES.ADMIN), getEventDetailedStatistics);
 router.get("/:id/attendance", authenticate, authorizeRoles(ROLES.ORGANIZER, ROLES.ADMIN), getEventAttendance);
 router.get("/:id/announcements", optionalAuthenticate, getEventAnnouncements);
 router.get("/:id", optionalAuthenticate, getEventById);

@@ -6,6 +6,8 @@ import eventRoutes from "./routes/event.routes.js";
 import registrationRoutes from "./routes/registration.routes.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
 import announcementRoutes from "./routes/announcement.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import organizerRoutes from "./routes/organizer.routes.js";
 import { notFoundHandler, errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -52,6 +54,8 @@ app.use("/api/events", eventRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/organizer", organizerRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
