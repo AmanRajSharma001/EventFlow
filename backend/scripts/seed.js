@@ -72,84 +72,118 @@ async function seed() {
   }
 
   // 2. Seed Events (3 Published Upcoming, 1 Completed Past, 1 Draft)
-  // Check by unique title with findFirst before creating to prevent duplicates
+  // Demo events reflect authentic campus mock data with rich display details.
+  // Events are created or updated by title so new fields populate cleanly on rerun.
   const now = new Date();
 
   const eventTemplates = [
     {
       title: "Campus E-Summit 2026: From Idea to Seed Funding",
-      description: "Connect with university alumni founders, angel investors, and venture scouts. Includes a live startup pitching arena with prototype incubation grants.",
-      venue: "Sir C.V. Raman Auditorium",
       category: "Entrepreneurship",
+      department: "Innovation & Incubation Cell (IIC)",
+      coordinator: "Dr. Preeti Deshmukh",
+      venue: "Sir C.V. Raman Auditorium",
+      description: "Connect with university alumni founders, angel investors, and venture scouts. Includes a live startup pitching arena with prototype incubation grants.",
       imageUrl: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=80",
+      featured: true,
+      price: "Free",
+      tags: ["Startups", "Pitching", "Networking", "E-Cell"],
       startDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000 + 6 * 60 * 60 * 1000),
       registrationDeadline: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
-      capacity: 50, // Between 3 and 100
+      capacity: 450, // Mapped from mock maxSeats
       status: "PUBLISHED",
       organizerId: organizer1.id,
     },
     {
       title: "Chancellor Trophy: Inter-Department Sports Tournament",
-      description: "Annual intra-university sporting tournament covering Cricket, Football, Basketball, Badminton, and Track & Field events across 8 engineering departments.",
-      venue: "University Sports Complex & Turf Ground",
       category: "Sports",
+      department: "Department of Physical Education",
+      coordinator: "Coach Dilip Rathore",
+      venue: "University Sports Complex & Turf Ground",
+      description: "Annual intra-university sporting tournament covering Cricket, Football, Basketball, Badminton, and Track & Field events across 8 engineering and sciences departments.",
       imageUrl: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80",
+      featured: true,
+      price: "Free for student athletes",
+      tags: ["Sports", "Cricket", "Athletics", "Tournament"],
       startDate: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
       endDate: new Date(now.getTime() + 16 * 24 * 60 * 60 * 1000),
       registrationDeadline: new Date(now.getTime() + 12 * 24 * 60 * 60 * 1000),
-      capacity: 80, // Between 3 and 100
+      capacity: 500, // Mapped from mock maxSeats
       status: "PUBLISHED",
       organizerId: organizer1.id,
     },
     {
       title: "Hackathon 2026: 36-Hour National Code Sprint",
-      description: "Our annual flagship 36-hour hackathon bringing together student teams to solve real-world problems in generative AI, campus automation, and cybersecurity.",
-      venue: "Computing Hub, Block 4",
       category: "Technical",
+      department: "Department of Computer Science & Engineering",
+      coordinator: "Dr. R. K. Mukherjee",
+      venue: "Computing Hub, Block 4",
+      description: "Our annual flagship 36-hour hackathon bringing together 75 student teams to solve real-world problems in generative AI, campus automation, and cybersecurity. Mentors and lab facilities provided.",
       imageUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80",
+      featured: true,
+      price: "Free",
+      tags: ["Hackathon", "AI & ML", "Software", "Coding"],
       startDate: new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000), // 21 days from now
       endDate: new Date(now.getTime() + 23 * 24 * 60 * 60 * 1000),
       registrationDeadline: new Date(now.getTime() + 19 * 24 * 60 * 60 * 1000),
-      capacity: 60, // Between 3 and 100
+      capacity: 300, // Mapped from mock maxSeats
       status: "PUBLISHED",
       organizerId: organizer2.id,
     },
     {
       title: "Chroma Lens: Annual Campus Photography Contest",
-      description: "Theme: Campus Life in Monochrome & Color. Top 30 curated student photographs were printed and exhibited during the annual arts walk.",
-      venue: "Exhibition Hall, Fine Arts Wing",
       category: "Competitions",
+      department: "School of Media & Humanities",
+      coordinator: "Prof. Anirudh Sen",
+      venue: "Exhibition Hall, Fine Arts Wing",
+      description: "Theme: \"Campus Life in Monochrome & Color\". Top 30 curated photographs were printed and exhibited during the annual art walk.",
       imageUrl: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?auto=format&fit=crop&w=1200&q=80",
+      featured: false,
+      price: "Free",
+      tags: ["Photography", "Arts", "Exhibition"],
       startDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000), // 10 days ago (past)
       endDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000),
       registrationDeadline: new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000),
-      capacity: 40,
+      capacity: 100, // Mapped from mock maxSeats
       status: "COMPLETED",
       organizerId: organizer2.id,
     },
     {
       title: "National Robotics Championship & Drone Racing",
-      description: "Autonomous bot obstacle challenges, combat robowars (15kg & 30kg), and FPV micro-drone racing tracks designed by university robotics teams.",
-      venue: "Main Sports Arena & Indoor Stadium",
       category: "Technical",
+      department: "Department of Mechanical & Mechatronics Eng.",
+      coordinator: "Prof. Harish Nair",
+      venue: "Main Sports Arena & Indoor Stadium",
+      description: "Autonomous bot obstacle challenges, combat robowars (15kg & 30kg), and FPV micro-drone racing tracks designed by senior university teams.",
       imageUrl: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=1200&q=80",
+      featured: false,
+      price: "Free",
+      tags: ["Robotics", "Drones", "Hardware", "Competition"],
       startDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000), // 30 days from now (draft)
       endDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000),
       registrationDeadline: new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000),
-      capacity: 50,
+      capacity: 250, // Mapped from mock maxSeats
       status: "DRAFT",
       organizerId: organizer2.id,
     },
   ];
 
+  // Seed or update events by title so re-running the seed populates newly added fields
   const seededEvents = [];
   for (const template of eventTemplates) {
     let event = await prisma.event.findFirst({
       where: { title: template.title },
     });
 
-    if (!event) {
+    if (event) {
+      // Update existing event so new display fields fill in
+      event = await prisma.event.update({
+        where: { id: event.id },
+        data: template,
+      });
+    } else {
+      // Create fresh event if not existing yet
       event = await prisma.event.create({
         data: template,
       });
