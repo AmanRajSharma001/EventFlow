@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   CheckCircle2,
@@ -12,6 +12,10 @@ import {
   Users,
 } from 'lucide-react';
 import { useOrganizer } from '../../hooks/useOrganizer';
+import attendanceService from '../../services/attendance.service';
+import registrationsService from '../../services/registrations.service';
+import { adaptEventAttendanceRoster } from '../../services/adapters/attendanceAdapter';
+import { isDatabasePendingError } from '../../services/dbStatus';
 import EventStatusBadge from '../../components/organizer/EventStatusBadge';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
@@ -29,14 +33,78 @@ export default function OrganizerAttendancePage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [scannerActive, setScannerActive] = useState(false);
   const [lastScannedStudent, setLastScannedStudent] = useState(null);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [attendanceSource, setAttendanceSource] = useState('demo');
+  const [isLoadingAttendance, setIsLoadingAttendance] = useState(false);
+  const [attendanceError, setAttendanceError] = useState(null);
+  const [qrToken, setQrToken] = useState('');
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+
+  const demoRecords = useMemo(
+    () =>
+      registrations.filter(
+        (registration) =>
+          registration.eventId === currentEvent?.id &&
+          registration.status === 'Confirmed'
+      ),
+    [currentEvent?.id, registrations]
+  );
+
+  const refreshAttendance = useCallback(async () => {
+    if (!currentEvent) return;
+
+    const token = localStorage.getItem('eventflow_token');
+    setAttendanceError(null);
+    setFeedback(null);
+
+    if (!token) {
+      setAttendanceRecords(demoRecords);
+      setAttendanceSource('demo');
+      return;
+    }
+
+    setIsLoadingAttendance(true);
+    try {
+      const [rosterResponse, attendanceResponse] = await Promise.all([
+        registrationsService.getEventRegistrations(currentEvent.id),
+        attendanceService.getEventAttendance(currentEvent.id),
+      ]);
+      const roster = Array.isArray(rosterResponse)
+        ? rosterResponse
+        : rosterResponse.registrations || [];
+      setAttendanceRecords(
+        adaptEventAttendanceRoster(roster, attendanceResponse.attendees || [])
+      );
+      setAttendanceSource('live');
+    } catch (error) {
+      if (isDatabasePendingError(error)) {
+        setAttendanceRecords(demoRecords);
+        setAttendanceSource('demo');
+      } else {
+        setAttendanceRecords([]);
+        setAttendanceSource('live');
+        setAttendanceError(
+          error?.response?.data?.message ||
+            'Unable to load attendance records. Please try again.'
+        );
+      }
+    } finally {
+      setIsLoadingAttendance(false);
+    }
+  }, [currentEvent, demoRecords]);
+
+  useEffect(() => {
+    const loadAttendance = async () => {
+      await refreshAttendance();
+    };
+    loadAttendance();
+  }, [refreshAttendance]);
 
   // Registrations for this event (only confirmed are eligible for attendance)
   const eventRegistrations = useMemo(() => {
-    if (!currentEvent) return [];
-    return registrations.filter(
-      (r) => r.eventId === currentEvent.id && r.status === 'Confirmed'
-    );
-  }, [registrations, currentEvent]);
+    return attendanceRecords.filter((registration) => registration.status === 'Confirmed');
+  }, [attendanceRecords]);
 
   const attendedCount = eventRegistrations.filter((r) => r.attendanceStatus === 'Present').length;
   const pendingCount = eventRegistrations.filter((r) => r.attendanceStatus === 'Pending' || !r.attendanceStatus).length;
@@ -59,8 +127,8 @@ export default function OrganizerAttendancePage() {
     });
   }, [eventRegistrations, statusFilter, searchQuery]);
 
-  // Simulate scanning a student ticket QR code
   const handleSimulateScan = () => {
+    if (attendanceSource !== 'demo') return;
     const nextPending = eventRegistrations.find(
       (r) => r.attendanceStatus === 'Pending' || !r.attendanceStatus
     );
@@ -73,6 +141,87 @@ export default function OrganizerAttendancePage() {
       const first = eventRegistrations[0];
       markAttendance(first.id, 'Present');
       setLastScannedStudent(first);
+    }
+  };
+
+  const handleQrCheckIn = async () => {
+    if (!qrToken.trim() || isCheckingIn) return;
+    setIsCheckingIn(true);
+    setFeedback(null);
+
+    try {
+      if (attendanceSource === 'demo') {
+        setFeedback({ type: 'error', message: 'QR verification requires a live backend connection.' });
+        return;
+      }
+
+      const result = await attendanceService.checkInWithQr(
+        qrToken.trim(),
+        currentEvent.id
+      );
+      setFeedback({
+        type: 'success',
+        message: result?.message || 'Attendance recorded successfully.',
+      });
+      setQrToken('');
+      await refreshAttendance();
+    } catch (error) {
+      if (isDatabasePendingError(error)) {
+        setAttendanceSource('demo');
+        setAttendanceRecords(demoRecords);
+        setFeedback({
+          type: 'info',
+          message: 'Database integration is pending. Demo attendance is active.',
+        });
+      } else {
+        setFeedback({
+          type: 'error',
+          message:
+            error?.response?.data?.message ||
+            'QR check-in failed. The ticket could not be verified.',
+        });
+      }
+    } finally {
+      setIsCheckingIn(false);
+    }
+  };
+
+  const handleManualCheckIn = async (student) => {
+    if (student.attendanceStatus === 'Present' || isCheckingIn) return;
+    setIsCheckingIn(true);
+    setFeedback(null);
+
+    try {
+      if (attendanceSource === 'demo') {
+        markAttendance(student.id, 'Present');
+        setFeedback({ type: 'success', message: `Attendance marked for ${student.studentName}.` });
+        return;
+      }
+
+      const result = await attendanceService.manualCheckIn(student.registrationId);
+      setFeedback({
+        type: 'success',
+        message: result?.message || `Attendance marked for ${student.studentName}.`,
+      });
+      await refreshAttendance();
+    } catch (error) {
+      if (isDatabasePendingError(error)) {
+        setAttendanceSource('demo');
+        setAttendanceRecords(demoRecords);
+        setFeedback({
+          type: 'info',
+          message: 'Database integration is pending. Demo attendance is active.',
+        });
+      } else {
+        setFeedback({
+          type: 'error',
+          message:
+            error?.response?.data?.message ||
+            'Manual check-in failed. Please try again.',
+        });
+      }
+    } finally {
+      setIsCheckingIn(false);
     }
   };
 
@@ -136,15 +285,43 @@ export default function OrganizerAttendancePage() {
         </div>
       </div>
 
-      {/* Demo Scanner Notice */}
-      <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-xs text-blue-900 leading-relaxed">
+      <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-xs leading-relaxed text-blue-900">
         <Info className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
         <div>
-          <strong className="font-semibold text-blue-950">Simulated QR Check-in Notice:</strong> This interactive scanner interface simulates gate validation. Check-ins update local mock state without requiring live camera hardware or remote server validation.
+          <strong className="font-semibold text-blue-950">
+            {attendanceSource === 'live' ? 'Live QR verification:' : 'Demo attendance notice:'}
+          </strong>{' '}
+          {attendanceSource === 'live'
+            ? 'QR tokens are verified by the backend. Invalid, expired, duplicate, and unauthorized responses are shown without changing local records.'
+            : 'Database integration is pending, so check-ins use the existing local preview records.'}
         </div>
       </div>
 
-      {/* Interactive Demo Scanner Box (collapsible) */}
+      {attendanceError && (
+        <div className="rounded-xl border border-red-100 bg-red-50/70 p-4 text-sm text-red-800">
+          <p>{attendanceError}</p>
+          <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={refreshAttendance}>
+            Retry attendance
+          </Button>
+        </div>
+      )}
+
+      {feedback && (
+        <div className={`rounded-xl border p-4 text-sm ${
+          feedback.type === 'success'
+            ? 'border-emerald-100 bg-emerald-50 text-emerald-800'
+            : feedback.type === 'info'
+              ? 'border-blue-100 bg-blue-50 text-blue-800'
+              : 'border-red-100 bg-red-50 text-red-800'
+        }`}>
+          {feedback.message}
+        </div>
+      )}
+
+      {isLoadingAttendance && (
+        <p className="text-sm text-slate-500">Loading attendance records...</p>
+      )}
+
       {scannerActive && (
         <div className="rounded-2xl border border-slate-200 bg-slate-900 p-6 text-white shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
@@ -152,7 +329,7 @@ export default function OrganizerAttendancePage() {
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-xs font-mono uppercase tracking-wider text-slate-300">
-                  Checkpoint Gate Scanner · Active Simulator
+                  Checkpoint Gate Scanner · {attendanceSource === 'live' ? 'Backend Verification' : 'Preview Simulator'}
                 </span>
               </div>
               <h3 className="mt-1 text-lg font-bold">
@@ -166,18 +343,47 @@ export default function OrganizerAttendancePage() {
               size="sm"
               icon={ScanLine}
               onClick={handleSimulateScan}
+              disabled={attendanceSource !== 'demo' || isCheckingIn}
             >
-              Simulate Scan Next Ticket
+              {attendanceSource === 'demo' ? 'Simulate Scan Next Ticket' : 'Camera scanner unavailable'}
             </Button>
           </div>
 
           <div className="mt-6 grid gap-6 md:grid-cols-[1.2fr_0.8fr] items-center">
+            <div className="md:col-span-2 rounded-xl border border-slate-700 bg-slate-950/70 p-4">
+              <label htmlFor="attendance-qr-token" className="text-xs font-semibold text-slate-300">
+                Backend QR token
+              </label>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="attendance-qr-token"
+                  value={qrToken}
+                  onChange={(event) => setQrToken(event.target.value)}
+                  placeholder="Paste the attendee's backend-issued QR token"
+                  disabled={attendanceSource !== 'live' || isCheckingIn}
+                  className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                />
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  icon={ScanLine}
+                  onClick={handleQrCheckIn}
+                  disabled={attendanceSource !== 'live' || !qrToken.trim() || isCheckingIn}
+                >
+                  {isCheckingIn ? 'Verifying...' : 'Verify QR'}
+                </Button>
+              </div>
+            </div>
+
             {/* Viewfinder Graphic */}
             <div className="relative mx-auto flex h-48 w-full max-w-sm flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-500/50 bg-slate-950/60 p-6 text-center">
               <div className="absolute inset-x-8 top-1/2 h-0.5 bg-blue-400 shadow-md shadow-blue-400 animate-bounce" />
               <QrCode className="h-16 w-16 text-slate-600" />
               <p className="mt-3 text-xs text-slate-400">
-                Point simulated scanner at student mobile pass
+                {attendanceSource === 'live'
+                  ? 'Use a camera integration or paste the backend token above.'
+                  : 'Point simulated scanner at student mobile pass.'}
               </p>
             </div>
 
@@ -346,26 +552,29 @@ export default function OrganizerAttendancePage() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
-                            onClick={() => markAttendance(student.id, 'Present')}
+                            onClick={() => handleManualCheckIn(student)}
+                            disabled={status === 'Present' || isCheckingIn}
                             className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
                               status === 'Present'
-                                ? 'bg-emerald-600 text-white'
+                                ? 'cursor-not-allowed bg-emerald-600 text-white opacity-70'
                                 : 'border border-slate-200 bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
                             }`}
                           >
                             Present
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => markAttendance(student.id, 'Absent')}
-                            className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
-                              status === 'Absent'
-                                ? 'bg-red-600 text-white'
-                                : 'border border-slate-200 bg-white text-slate-700 hover:bg-red-50 hover:text-red-700'
-                            }`}
-                          >
-                            Absent
-                          </button>
+                          {attendanceSource === 'demo' && (
+                            <button
+                              type="button"
+                              onClick={() => markAttendance(student.id, 'Absent')}
+                              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
+                                status === 'Absent'
+                                  ? 'bg-red-600 text-white'
+                                  : 'border border-slate-200 bg-white text-slate-700 hover:bg-red-50 hover:text-red-700'
+                              }`}
+                            >
+                              Absent
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
