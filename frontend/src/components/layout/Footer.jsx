@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { CalendarDays, ArrowUpRight } from 'lucide-react';
 import { mockCategories } from '../../data/mockEvents';
 
-const footerLinkClass = 'rounded-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 motion-reduce:transition-none';
+const footerLinkClass = 'rounded-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 motion-reduce:transition-none';
 
 export default function Footer() {
   return (
@@ -10,11 +10,11 @@ export default function Footer() {
       <div className="ef-container py-11 sm:py-14">
         <div className="grid gap-9 sm:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_1fr] lg:gap-12">
           <div className="max-w-sm">
-            <Link to="/" className="inline-flex items-center gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
-              <span className="grid h-9 w-9 place-items-center rounded-lg bg-indigo-600 text-white">
+            <Link to="/" className="inline-flex items-center gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-blue-600 text-white">
                 <CalendarDays aria-hidden="true" className="h-[18px] w-[18px]" />
               </span>
-              <span className="text-lg font-bold tracking-tight text-white">Event<span className="text-indigo-300">Flow</span></span>
+              <span className="text-lg font-bold tracking-tight text-white">Event<span className="text-blue-400">Flow</span></span>
             </Link>
             <p className="mt-4 text-sm leading-6 text-slate-400">
               Your starting point for events hosted by campus clubs, councils, and departments.
@@ -55,7 +55,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col gap-3 border-t border-slate-800 pt-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© EventFlow</p>
+          <p>© 2026 EventFlow</p>
           <p>Sample experience · Campus listings are for demonstration</p>
         </div>
       </div>
