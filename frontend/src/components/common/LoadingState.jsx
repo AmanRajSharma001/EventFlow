@@ -1,4 +1,4 @@
-import { LoaderCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function LoadingState({ label = 'Loading…', className = '' }) {
   return (
@@ -6,9 +6,9 @@ export default function LoadingState({ label = 'Loading…', className = '' }) {
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className={`inline-flex min-h-11 items-center justify-center gap-2.5 text-sm font-medium text-slate-600 ${className}`}
+      className={`flex flex-col items-center justify-center gap-3 py-16 text-sm text-slate-500 ${className}`}
     >
-      <LoaderCircle aria-hidden="true" className="h-4 w-4 text-indigo-600 motion-safe:animate-spin" />
+      <Loader2 aria-hidden="true" className="h-7 w-7 text-blue-600 motion-safe:animate-spin" />
       <span>{label}</span>
     </div>
   );
