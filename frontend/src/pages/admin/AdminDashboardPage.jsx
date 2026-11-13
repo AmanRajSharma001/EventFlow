@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
@@ -20,11 +20,62 @@ import {
   calculateAdminMetrics,
   MOCK_USER_GROWTH_DATA,
 } from '../../data/mockAdminData';
+import ErrorState from '../../components/common/ErrorState';
+import LoadingState from '../../components/common/LoadingState';
 
 export default function AdminDashboardPage() {
-  const { users, events, registrations, auditLog } = useAdmin();
-  const metrics = calculateAdminMetrics(users, events, registrations);
+  const {
+    users,
+    events,
+    registrations,
+    auditLog,
+    dashboard,
+    dashboardSource,
+    isLoadingDashboard,
+    dashboardError,
+    refreshDashboard,
+  } = useAdmin();
+  const demoMetrics = calculateAdminMetrics(users, events, registrations);
+  const metrics =
+    dashboardSource === 'live' && dashboard
+      ? {
+          totalUsers: dashboard.users?.total ?? 0,
+          totalStudents: dashboard.users?.students ?? 0,
+          totalOrganizers: dashboard.users?.organizers ?? 0,
+          totalEvents: dashboard.events?.total ?? 0,
+          publishedEvents: dashboard.events?.published ?? 0,
+          draftEvents: dashboard.events?.draft ?? 0,
+          completedEvents: dashboard.events?.completed ?? 0,
+          cancelledEvents: dashboard.events?.cancelled ?? 0,
+          totalRegistrations: dashboard.participation?.totalRegistrations ?? 0,
+          totalAttended: dashboard.participation?.totalAttendance ?? 0,
+          overallAttendanceRate:
+            dashboard.participation?.attendanceRatePercent ?? 0,
+          activeStudents: null,
+          activeOrganizers: null,
+        }
+      : demoMetrics;
   const [growthMetric, setGrowthMetric] = useState('students');
+
+  useEffect(() => {
+    if (dashboardSource === 'demo' && localStorage.getItem('eventflow_token')) {
+      refreshDashboard();
+    }
+  }, [dashboardSource, refreshDashboard]);
+
+  if (isLoadingDashboard) {
+    return <LoadingState label="Loading admin analytics..." />;
+  }
+
+  if (dashboardSource === 'error') {
+    return (
+      <ErrorState
+        title="Unable to load admin analytics"
+        description={dashboardError}
+        onRetry={refreshDashboard}
+      />
+    );
+  }
 
   const statCards = [
     {
@@ -38,7 +89,10 @@ export default function AdminDashboardPage() {
     {
       label: 'Active Students',
       value: metrics.totalStudents,
-      sub: `${metrics.activeStudents} active verified accounts`,
+      sub:
+        metrics.activeStudents == null
+          ? 'Backend-reported student accounts'
+          : `${metrics.activeStudents} active verified accounts`,
       icon: GraduationCap,
       trend: '+24 new this week',
       color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
@@ -46,7 +100,10 @@ export default function AdminDashboardPage() {
     {
       label: 'Club & Faculty Organizers',
       value: metrics.totalOrganizers,
-      sub: `${metrics.activeOrganizers} active event creators`,
+      sub:
+        metrics.activeOrganizers == null
+          ? 'Backend-reported organizer accounts'
+          : `${metrics.activeOrganizers} active event creators`,
       icon: Briefcase,
       trend: '6 departments represented',
       color: 'text-violet-600 bg-violet-50 border-violet-100',
@@ -64,7 +121,7 @@ export default function AdminDashboardPage() {
       value: metrics.totalRegistrations,
       sub: 'Across all active events',
       icon: TrendingUp,
-      trend: '+84 registrations this week',
+      trend: dashboardSource === 'live' ? 'Backend analytics' : '+84 registrations this week',
       color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
     },
     {
@@ -72,7 +129,7 @@ export default function AdminDashboardPage() {
       value: `${metrics.overallAttendanceRate}%`,
       sub: `${metrics.totalAttended} total verified check-ins`,
       icon: CheckCircle2,
-      trend: 'High compliance rate',
+      trend: dashboardSource === 'live' ? 'Backend analytics' : 'High compliance rate',
       color: 'text-teal-600 bg-teal-50 border-teal-100',
     },
   ];
@@ -185,34 +242,42 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Bar Chart Visualization */}
-          <div className="h-56 flex items-end justify-between gap-3 pt-6 px-4 pb-2 border-b border-slate-100">
-            {MOCK_USER_GROWTH_DATA.map((item, idx) => {
-              const val = growthMetric === 'students' ? item.students : item.organizers;
-              const maxVal = growthMetric === 'students' ? 1200 : 30;
-              const heightPct = Math.round((val / maxVal) * 100);
+          {dashboardSource === 'live' ? (
+            <div className="flex h-56 items-center justify-center border-b border-slate-100 text-center text-sm text-slate-500">
+              Historical user-growth data is not included in the live analytics response.
+            </div>
+          ) : (
+            <>
+              {/* Bar Chart Visualization */}
+              <div className="h-56 flex items-end justify-between gap-3 pt-6 px-4 pb-2 border-b border-slate-100">
+                {MOCK_USER_GROWTH_DATA.map((item, idx) => {
+                  const val = growthMetric === 'students' ? item.students : item.organizers;
+                  const maxVal = growthMetric === 'students' ? 1200 : 30;
+                  const heightPct = Math.round((val / maxVal) * 100);
 
-              return (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <div className="text-[11px] font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {val}
-                  </div>
-                  <div
-                    style={{ height: `${heightPct}%` }}
-                    className="w-full max-w-[48px] bg-blue-600 rounded-t-md hover:bg-blue-700 transition-all duration-300 relative group-hover:ring-2 ring-blue-200"
-                  />
-                  <span className="text-xs font-semibold text-slate-500 mt-2">
-                    {item.month}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                      <div className="text-[11px] font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {val}
+                      </div>
+                      <div
+                        style={{ height: `${heightPct}%` }}
+                        className="w-full max-w-12 bg-blue-600 rounded-t-md hover:bg-blue-700 transition-all duration-300 relative group-hover:ring-2 ring-blue-200"
+                      />
+                      <span className="text-xs font-semibold text-slate-500 mt-2">
+                        {item.month}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between text-xs text-slate-500">
-            <span>Aggregated across 7 engineering and science departments</span>
-            <span className="font-semibold text-blue-600">+340% YoY Growth</span>
-          </div>
+              <div className="mt-4 flex flex-wrap items-center justify-between text-xs text-slate-500">
+                <span>Aggregated across 7 engineering and science departments</span>
+                <span className="font-semibold text-blue-600">+340% YoY Growth</span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Quick System Distribution Card */}
