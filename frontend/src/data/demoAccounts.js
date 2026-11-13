@@ -23,4 +23,12 @@ export const DEMO_ACCOUNTS = {
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
     managedEvents: ['evt-hackathon-2026'],
   },
+  admin: {
+    id: 'adm-demo',
+    name: 'Dr. Amitabh Sen',
+    email: 'admin@college.edu',
+    department: 'Dean Academic Affairs / Central Administration',
+    role: 'admin',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+  },
 };

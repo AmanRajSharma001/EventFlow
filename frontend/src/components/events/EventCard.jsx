@@ -23,10 +23,10 @@ export default function EventCard({ event }) {
   const { attendeesCount, maxSeats, seatsLeft, percentFilled } = getEventCapacity(event);
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-500/20 motion-reduce:transition-none">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-500/20 motion-reduce:transition-none">
       <Link
         to={`/events/${event.id}`}
-        className="relative block aspect-[16/9] overflow-hidden bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-indigo-500"
+        className="relative block aspect-[16/9] overflow-hidden bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-blue-500"
         aria-label={`View details for ${event.title}`}
       >
         {imageFailed ? (
@@ -63,7 +63,7 @@ export default function EventCard({ event }) {
         <h2 className="text-lg font-semibold leading-snug tracking-tight text-slate-950">
           <Link
             to={`/events/${event.id}`}
-            className="rounded-sm outline-none transition-colors hover:text-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="rounded-sm outline-none transition-colors hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {event.title}
           </Link>
@@ -117,7 +117,7 @@ export default function EventCard({ event }) {
                 className="h-1.5 overflow-hidden rounded-full bg-slate-100"
               >
                 <div
-                  className={`h-full rounded-full ${percentFilled >= 85 ? 'bg-amber-500' : 'bg-slate-900'}`}
+                  className={`h-full rounded-full ${percentFilled >= 85 ? 'bg-amber-500' : 'bg-blue-600'}`}
                   style={{ width: `${percentFilled}%` }}
                 />
               </div>
@@ -130,7 +130,7 @@ export default function EventCard({ event }) {
             </span>
             <Link
               to={`/events/${event.id}`}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-md text-sm font-semibold text-indigo-700 outline-none transition-colors hover:text-indigo-900 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md text-sm font-semibold text-blue-700 outline-none transition-colors hover:text-blue-900 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               Details
               <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

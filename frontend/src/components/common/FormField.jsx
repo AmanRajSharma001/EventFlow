@@ -12,14 +12,15 @@ export default function FormField({
         {label}
         {required && (
           <>
-            <span aria-hidden="true" className="ml-1 text-rose-700">*</span>
+            <span aria-hidden="true" className="ml-1 text-blue-600">*</span>
             <span className="sr-only"> required</span>
           </>
         )}
       </label>
       {children}
       {error && (
-        <p className="ef-field-error" id={`${id}-error`} role="alert">
+        <p className="ef-field-error flex items-center gap-1.5" id={`${id}-error`} role="alert">
+          <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" aria-hidden="true" />
           {error}
         </p>
       )}
