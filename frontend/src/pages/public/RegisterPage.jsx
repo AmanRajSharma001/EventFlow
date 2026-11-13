@@ -39,6 +39,7 @@ export default function RegisterPage() {
   const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updateField = (field, value) => {
     setFormData((current) => ({ ...current, [field]: value }));
@@ -52,34 +53,43 @@ export default function RegisterPage() {
       email: 'student@example.com',
       department: 'Information Technology',
       semester: '6th Semester',
-      phone: '',
-      password: '',
-      confirmPassword: '',
+      phone: '+91 98765 43210',
+      password: 'password123',
+      confirmPassword: 'password123',
     });
     setPasswordError('');
     toast.success('Sample details filled in the form.');
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       setPasswordError('Passwords do not match. Check both fields and try again.');
       return;
     }
 
-    registerStudent(formData);
-    navigate('/', { replace: true });
+    setIsSubmitting(true);
+    try {
+      const res = await registerStudent(formData);
+      if (res?.success) {
+        navigate('/student/dashboard', { replace: true });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="ef-container grid min-h-[70vh] gap-8 py-10 sm:py-14 lg:grid-cols-[0.78fr_1.22fr] lg:items-start lg:gap-12">
       <aside className="lg:sticky lg:top-28">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-700">Student preview account</p>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Student preview account</p>
         <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.04em] text-slate-950 sm:text-4xl">Get started with your campus events.</h1>
         <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base">Create a local preview profile to explore the EventFlow student experience.</p>
-        <div className="mt-6 rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
-          <p className="text-sm font-semibold text-indigo-950">Preview account only</p>
-          <p className="mt-1 text-xs leading-5 text-indigo-900/80">Your details stay in this browser. Account creation is not connected to the backend yet.</p>
+        <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
+          <p className="text-sm font-semibold text-blue-950">Backend Registration Notice</p>
+          <p className="mt-1 text-xs leading-5 text-blue-900/80">
+            Account registration submits your name, email, and password to the Express backend. Additional academic details (roll number, department, semester, phone) are saved to your browser session until the Prisma User schema is expanded.
+          </p>
         </div>
         <Button type="button" variant="secondary" size="sm" className="mt-4" onClick={handleDemoFill}>
           Fill sample details
@@ -131,7 +141,7 @@ export default function RegisterPage() {
             <FormField id="new-password" label="Password" hint="Use at least 8 characters." required>
               <div className="relative">
                 <input id="new-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} aria-describedby="new-password-hint" value={formData.password} onChange={(event) => updateField('password', event.target.value)} placeholder="At least 8 characters" className="ef-input pr-12" />
-                <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                   {showPassword ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}
                 </button>
               </div>
@@ -139,7 +149,7 @@ export default function RegisterPage() {
             <FormField id="confirm-password" label="Confirm password" error={passwordError} required>
               <div className="relative">
                 <input id="confirm-password" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} aria-invalid={passwordError ? 'true' : undefined} aria-describedby={passwordError ? 'confirm-password-error' : undefined} value={formData.confirmPassword} onChange={(event) => updateField('confirmPassword', event.target.value)} placeholder="Re-enter your password" className="ef-input pr-12" />
-                <button type="button" onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'} className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                <button type="button" onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'} className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                   {showConfirmPassword ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}
                 </button>
               </div>
@@ -149,14 +159,20 @@ export default function RegisterPage() {
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-600">
             This is a local preview profile. Do not use a password you use for another account.
           </div>
-          <Button type="submit" className="w-full sm:w-auto" icon={ArrowRight} iconPosition="right">
-            Create preview account
+          <Button
+            type="submit"
+            className="w-full sm:w-auto"
+            icon={ArrowRight}
+            iconPosition="right"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Registering account...' : 'Create account'}
           </Button>
         </form>
 
         <p className="mt-6 border-t border-slate-100 pt-5 text-center text-sm text-slate-600">
           Already have a preview profile?{' '}
-          <Link to="/login" className="rounded-sm font-semibold text-indigo-700 hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Sign in</Link>
+          <Link to="/login" className="rounded-sm font-semibold text-blue-700 hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Sign in</Link>
         </p>
       </section>
     </div>
