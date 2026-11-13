@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.routes.js";
 import eventRoutes from "./routes/event.routes.js";
 import registrationRoutes from "./routes/registration.routes.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
+import announcementRoutes from "./routes/announcement.routes.js";
 import { notFoundHandler, errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -50,6 +51,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
