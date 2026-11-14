@@ -4,7 +4,7 @@ This document specifies the complete API contract implemented for the EventFlow 
 
 ## Base Configuration
 
-- Base URL: `http://localhost:5000/api`
+- Base URL: `http://localhost:5001/api`
 - CORS: Configured for `http://localhost:5173`, `http://localhost:3000`, and configurable via `CORS_ORIGIN`.
 - Content-Type: `application/json`
 - Authentication Header: `Authorization: Bearer <token>`
@@ -229,6 +229,6 @@ This document specifies the complete API contract implemented for the EventFlow 
 
 ## 7. Electron Integration Notes for Azmol
 
-1. In the Electron main process, start the Express backend as a child process using `fork` or `spawn` (`node backend/src/server.js`) on app startup, or connect to the running local API port (`5000`).
-2. Pass `VITE_API_BASE_URL=http://localhost:5000/api` to the frontend bundle.
+1. In the Electron main process, start the Express backend as a child process using `fork` or `spawn` (`node backend/src/server.js`) on app startup, or connect to the running local API port (`5001`).
+2. Pass `VITE_API_BASE_URL=http://localhost:5001/api` to the frontend bundle.
 3. Use standard `localStorage.getItem('eventflow_token')` for JWT session persistence, which is automatically handled by the Axios client in `frontend/src/services/api.js`.
