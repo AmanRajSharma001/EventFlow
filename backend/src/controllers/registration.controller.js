@@ -65,15 +65,40 @@ export const registerForEvent = async (req, res, next) => {
         const existingRegistration = await tx.registration.findFirst({
           where: {
             eventId,
-            studentId,
-            status: REGISTRATION_STATUS.CONFIRMED
+            studentId
           }
         });
 
         if (existingRegistration) {
-          const err = new Error("You are already registered for this event");
-          err.statusCode = 409;
-          throw err;
+          if (existingRegistration.status === REGISTRATION_STATUS.CONFIRMED) {
+            const err = new Error("You are already registered for this event");
+            err.statusCode = 409;
+            throw err;
+          }
+
+          if (existingRegistration.status === REGISTRATION_STATUS.CANCELLED) {
+            return await tx.registration.update({
+              where: { id: existingRegistration.id },
+              data: {
+                status: REGISTRATION_STATUS.CONFIRMED,
+                cancelledAt: null,
+                cancellationReason: null,
+                notes: notes || null,
+                department: department || null,
+                semester: semester || null
+              },
+              include: {
+                event: {
+                  select: {
+                    id: true,
+                    title: true,
+                    startDate: true,
+                    location: true
+                  }
+                }
+              }
+            });
+          }
         }
 
         const newRegistration = await tx.registration.create({
@@ -98,7 +123,7 @@ export const registerForEvent = async (req, res, next) => {
         });
 
         return newRegistration;
-      });
+      }, { isolationLevel: "Serializable" });
 
       return res.status(201).json({
         success: true,
@@ -125,6 +150,12 @@ export const registerForEvent = async (req, res, next) => {
       }
     });
   } catch (error) {
+    if (error?.code === "P2034") {
+      return res.status(409).json({
+        success: false,
+        message: "Could not complete registration, please try again"
+      });
+    }
     if (error.statusCode) {
       return res.status(error.statusCode).json({
         success: false,
