@@ -1,3 +1,21 @@
+> [!IMPORTANT]
+> ### IMPORTANT — macOS FIRST-TIME OPENING INSTRUCTIONS
+>
+> When opening the downloaded EventFlow application for the first time, macOS may show a security warning saying that Apple cannot verify the developer or that the app cannot be opened.
+>
+> **To open the application:**
+> 1. Open **System Settings** on your Mac.
+> 2. Go to **Privacy & Security**.
+> 3. Scroll down to the **Security** section.
+> 4. Find the message related to EventFlow and click **Open Anyway**.
+> 5. Confirm the action if macOS asks again.
+>
+> After approving it, open EventFlow normally.
+>
+> *Note: This is a standard one-time manual approval for the downloaded app on macOS (required for software distributed outside the Mac App Store without an enterprise Apple Developer ID). This process does not disable Gatekeeper or reduce your Mac's overall security protections.*
+
+---
+
 # EventFlow — College Event Management & Participation System
 
 EventFlow is a desktop application developed as a college major project to streamline event organization, student registrations, attendance verification, and campus engagement across university departments and student clubs.
@@ -181,30 +199,25 @@ This project was built collaboratively by a team of three student developers:
 
 ## 8. Application Development (ISD)
 
-EventFlow is implemented as a desktop application using Electron to provide a native experience on college lab machines and administrative laptops.
+EventFlow is engineered as a cross-platform desktop application using Electron to deliver a native, high-performance desktop experience across campus workstations, departmental labs, and administrative laptops. The application development responsibilities are distributed among the three project contributors as detailed below:
 
-### Main Process (`electron/main.cjs`)
-The Main Process runs in a Node.js environment responsible for:
-- Creating and configuring the primary `BrowserWindow` (1280x850 resolution, minimum 960x640).
-- Setting macOS-specific application menus with standard keyboard shortcuts (`Cmd+C`, `Cmd+V`, `Cmd+A`, `Cmd+Z`) ensuring text fields function naturally.
-- Managing the backend process lifecycle:
-  - Before opening the window, it tests if an EventFlow backend is already listening on `http://localhost:5001/api/health`.
-  - If not running, it automatically spawns the Express backend as a managed child process using Electron's Node runtime (`ELECTRON_RUN_AS_NODE=1`).
-  - Upon window closure or application exit, it cleanly terminates the child backend process (`SIGTERM`).
+### Aman Raj Sharma — Electron Main Architecture, Process Lifecycle & Desktop Packaging
+- **Main Process Engineering (`electron/main.cjs`)**: Configured and initialized the primary desktop `BrowserWindow` (1280x850 default, 960x640 minimum dimensions) and implemented native macOS application menus with standard keyboard shortcuts (`Cmd+C`, `Cmd+V`, `Cmd+A`, `Cmd+Z`) for seamless system clipboard integration.
+- **Backend Child Process Lifecycle Management**: Implemented automatic child process orchestration using Electron's Node runtime (`ELECTRON_RUN_AS_NODE=1`). The main process detects whether an external API instance is already listening on port 5001 (`/api/health`); if not, it automatically spawns the Express backend as a managed subprocess and enforces clean shutdown (`SIGTERM`) when the application exits.
+- **Window Security & External Navigation**: Intercepted external hyperlinking to prevent unauthorized popups via `setWindowOpenHandler`, routing all non-local web traffic safely into the user's default external browser using `shell.openExternal`.
+- **macOS DMG Packaging & Deep Code Signing**: Automated standalone production distribution using `electron-builder` for Apple Silicon (`arm64`), established ASAR unpack rules for native backend modules, and authored the `scripts/after-pack.cjs` hook to eliminate macOS filesystem detritus and apply deep ad-hoc code signatures sealing all application bundle frameworks.
 
-### Preload Script (`electron/preload.cjs`)
-The preload script establishes a secure bridge using Electron's `contextBridge`:
-- `contextIsolation: true`: Isolates the renderer's JavaScript context from Electron internal APIs.
-- `nodeIntegration: false`: Completely disables direct Node.js access in the DOM, preventing arbitrary system execution from untrusted content.
-- `sandbox: true`: Enforces the Chromium renderer sandbox.
-- Exposes a minimal, safe API surface under `window.electron` for desktop detection and backend health queries.
+### Azmol — Renderer Architecture, Preload Security Bridge & Desktop UI Integration
+- **Secure IPC Preload Bridge (`electron/preload.cjs`)**: Developed the desktop security boundary utilizing Electron's `contextBridge`, strictly enforcing `contextIsolation: true`, `nodeIntegration: false`, and Chromium renderer sandboxing to prevent arbitrary Node.js execution within the web context.
+- **Desktop Environment Detection Interface**: Designed and exposed a controlled, minimal API surface (`window.electron`) providing the React frontend with desktop environment detection, platform identification, and backend health query status.
+- **Dual-Mode Desktop Routing Architecture**: Implemented adaptive client-side routing within `frontend/src/App.jsx`, dynamically toggling between `HashRouter` (for local `file://` asset resolution inside the packaged desktop DMG) and `BrowserRouter` (for standard web development), eliminating blank screens on page reloads.
+- **Desktop UI Responsiveness & System Status**: Tailored the React 19 and Tailwind CSS UI layouts for widescreen desktop displays and integrated real-time desktop connection status badges in the global header to display live communication with the local API server.
 
-### Navigation and Security
-- Restricts external URL navigation. Any non-local link is intercepted and opened in the user's default system web browser via `shell.openExternal`.
-- Prevents arbitrary pop-ups by denying unhandled `window.open` calls via `setWindowOpenHandler`.
-
-### Desktop Routing Integration
-To support the `file://` protocol when running from a packaged DMG without breaking browser navigation in development, `frontend/src/App.jsx` dynamically switches between `HashRouter` (in packaged `file://` mode) and `BrowserRouter` (in web/dev mode). This eliminates blank screens on page reloads inside the desktop application.
+### Sagar — Desktop Database Initialization, Runtime Configuration & Data Integrity
+- **Multi-Location Environment Discovery**: Implemented flexible runtime environment loaders supporting external configuration via `~/Library/Application Support/EventFlow/.env`, `~/.eventflow.env`, and root `.env` files, enabling portable database connection setups without hardcoded secrets.
+- **Embedded Prisma ORM Packaging**: Configured the Prisma 7 client runtime and `@prisma/adapter-pg` to build and package reliably within the Electron ASAR structure, resolving path conflicts for generated client engines on desktop environments.
+- **Database Readiness Probes & Fault Tolerance**: Implemented backend health check endpoints (`/api/ready`) utilized during desktop launch sequences to verify PostgreSQL connectivity before presenting the application as fully operational.
+- **Desktop Transaction Isolation & Persistence**: Enforced consistent ACID transaction guarantees, serializable capacity locks, and relational constraints across both standalone desktop sessions and browser-based interfaces.
 
 ---
 
