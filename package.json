@@ -1,7 +1,7 @@
 {
   "name": "eventflow",
   "productName": "EventFlow",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "EventFlow — College Event Management & Participation System",
   "main": "electron/main.cjs",
   "author": "EventFlow Team (Aman, Azmol, Sagar)",

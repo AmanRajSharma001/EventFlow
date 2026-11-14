@@ -45,35 +45,48 @@ export function adaptUser(backendUser) {
 
 /**
  * Prepares user registration payload for the backend POST /api/auth/register endpoint.
- * Backend strictly accepts: { name, email, password }.
+ * Backend accepts: { name, email, password, rollNumber, department, semester, phone }.
  *
  * @param {object} frontendData - Form data from RegisterPage
- * @returns {{ name: string, email: string, password: string }}
+ * @returns {{ name: string, email: string, password: string, rollNumber?: string, department?: string, semester?: string, phone?: string }}
  */
 export function adaptRegisterPayload(frontendData) {
-  return {
+  const payload = {
     name: (frontendData.fullName || frontendData.name || '').trim(),
     email: (frontendData.email || '').trim().toLowerCase(),
     password: frontendData.password,
   };
+
+  if (frontendData.rollNumber) payload.rollNumber = frontendData.rollNumber.trim().toUpperCase();
+  if (frontendData.department) payload.department = frontendData.department.trim();
+  if (frontendData.semester) payload.semester = frontendData.semester.trim();
+  if (frontendData.phone) payload.phone = frontendData.phone.trim();
+
+  return payload;
 }
 
 /**
  * Prepares user credentials for the backend POST /api/auth/login endpoint.
- * Backend strictly accepts: { email, password }.
- * If user entered a roll number or identifier without '@', normalizes to student college email.
+ * Backend accepts: { email, password } or { identifier, password } or { rollNumber, password }.
+ * Supports logging in with institutional email or university roll number (URN).
  *
  * @param {object} credentials - Form data from LoginPage
- * @returns {{ email: string, password: string }}
+ * @returns {{ identifier: string, password: string, email?: string, rollNumber?: string }}
  */
 export function adaptLoginPayload(credentials) {
-  const identifier = (credentials.identifier || credentials.email || '').trim();
-  const email = identifier.includes('@')
-    ? identifier.toLowerCase()
-    : `${identifier.toLowerCase()}@college.edu`;
+  const identifier = (credentials.identifier || credentials.email || credentials.rollNumber || '').trim();
 
-  return {
-    email,
+  const payload = {
     password: credentials.password,
   };
+
+  if (identifier.includes('@')) {
+    payload.email = identifier.toLowerCase();
+    payload.identifier = identifier.toLowerCase();
+  } else {
+    payload.identifier = identifier;
+    payload.rollNumber = identifier.toUpperCase();
+  }
+
+  return payload;
 }

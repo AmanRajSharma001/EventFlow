@@ -5,7 +5,7 @@ import { ROLES } from "../validators/auth.validator.js";
 
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, rollNumber, department, semester, phone } = req.body;
     const assignedRole = role || ROLES.STUDENT;
     const hashedPassword = await hashPassword(password);
 
@@ -26,13 +26,21 @@ export const register = async (req, res, next) => {
           name,
           email,
           password: hashedPassword,
-          role: assignedRole
+          role: assignedRole,
+          ...(rollNumber && { rollNumber: rollNumber.trim().toUpperCase() }),
+          ...(department && { department: department.trim() }),
+          ...(semester && { semester: semester.trim() }),
+          ...(phone && { phone: phone.trim() }),
         },
         select: {
           id: true,
           name: true,
           email: true,
           role: true,
+          rollNumber: true,
+          department: true,
+          semester: true,
+          phone: true,
           createdAt: true
         }
       });
@@ -65,17 +73,24 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, identifier, rollNumber, password } = req.body;
+    const lookupKey = (identifier || rollNumber || email || "").trim();
 
     if (isDatabaseReady() && prisma?.user) {
-      const user = await prisma.user.findUnique({
-        where: { email }
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: { equals: lookupKey.toLowerCase(), mode: "insensitive" } },
+            { rollNumber: { equals: lookupKey.toUpperCase(), mode: "insensitive" } },
+            { rollNumber: { equals: lookupKey, mode: "insensitive" } }
+          ]
+        }
       });
 
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: "Invalid email or password"
+          message: "Invalid credentials. Please check your email or roll number and password."
         });
       }
 
@@ -102,7 +117,11 @@ export const login = async (req, res, next) => {
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role
+            role: user.role,
+            rollNumber: user.rollNumber,
+            department: user.department,
+            semester: user.semester,
+            phone: user.phone,
           },
           token
         }

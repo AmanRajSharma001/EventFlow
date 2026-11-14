@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Building2,
   GraduationCap,
@@ -49,6 +49,21 @@ export default function StudentProfilePage() {
     phone: user?.phone || '+91 98765 43210',
     bio: user?.bio || 'Undergraduate student exploring hackathons, AI workshops, and university club activities.',
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        rollNumber: user.rollNumber || prev.rollNumber,
+        department: user.department || prev.department,
+        semester: user.semester || prev.semester,
+        phone: user.phone || prev.phone,
+        bio: user.bio || prev.bio,
+      }));
+    }
+  }, [user]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

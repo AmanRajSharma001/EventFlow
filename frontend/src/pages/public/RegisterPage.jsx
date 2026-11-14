@@ -86,9 +86,9 @@ export default function RegisterPage() {
         <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.04em] text-slate-950 sm:text-4xl">Get started with your campus events.</h1>
         <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base">Create a local preview profile to explore the EventFlow student experience.</p>
         <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
-          <p className="text-sm font-semibold text-blue-950">Backend Registration Notice</p>
+          <p className="text-sm font-semibold text-blue-950">Campus Account Registration</p>
           <p className="mt-1 text-xs leading-5 text-blue-900/80">
-            Account registration submits your name, email, and password to the Express backend. Additional academic details (roll number, department, semester, phone) are saved to your browser session until the Prisma User schema is expanded.
+            Your personal details, college roll number (URN), department, and credentials are saved directly to the PostgreSQL database.
           </p>
         </div>
         <Button type="button" variant="secondary" size="sm" className="mt-4" onClick={handleDemoFill}>

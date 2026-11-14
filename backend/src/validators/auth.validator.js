@@ -21,6 +21,10 @@ export const registerSchema = z.object({
     .string({ required_error: "Password is required" })
     .min(8, "Password must contain at least 8 characters")
     .max(128, "Password cannot exceed 128 characters"),
+  rollNumber: z.string().trim().optional(),
+  department: z.string().trim().optional(),
+  semester: z.string().trim().optional(),
+  phone: z.string().trim().optional(),
   role: z
     .string()
     .optional()
@@ -33,13 +37,32 @@ export const registerSchema = z.object({
     .transform(() => ROLES.STUDENT)
 });
 
-export const loginSchema = z.object({
-  email: z
-    .string({ required_error: "Email is required" })
-    .trim()
-    .toLowerCase()
-    .email("Enter a valid email"),
-  password: z
-    .string({ required_error: "Password is required" })
-    .min(1, "Password is required")
-});
+export const loginSchema = z
+  .object({
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Enter a valid email")
+      .optional(),
+    identifier: z
+      .string()
+      .trim()
+      .min(1, "Identifier is required")
+      .optional(),
+    rollNumber: z
+      .string()
+      .trim()
+      .min(1, "Roll number is required")
+      .optional(),
+    password: z
+      .string({ required_error: "Password is required" })
+      .min(1, "Password is required")
+  })
+  .refine(
+    (data) => Boolean(data.email || data.identifier || data.rollNumber),
+    {
+      message: "Email or Roll Number (URN) is required",
+      path: ["email"]
+    }
+  );

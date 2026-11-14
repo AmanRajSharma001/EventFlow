@@ -18,11 +18,11 @@ export default function LoginPage() {
   const handleFillDemo = (role) => {
     setActiveRole(role);
     if (role === 'student') {
-      setFormData({ identifier: DEMO_ACCOUNTS.student.rollNumber, password: 'password123' });
+      setFormData({ identifier: 'student1@eventflow.test', password: 'Password@123' });
     } else if (role === 'organizer') {
-      setFormData({ identifier: DEMO_ACCOUNTS.organizer.email, password: 'password123' });
+      setFormData({ identifier: 'organizer1@eventflow.test', password: 'Password@123' });
     } else {
-      setFormData({ identifier: DEMO_ACCOUNTS.admin.email, password: 'password123' });
+      setFormData({ identifier: 'admin@eventflow.test', password: 'Password@123' });
     }
   };
 
@@ -34,26 +34,24 @@ export default function LoginPage() {
       let credentials = {};
       if (activeRole === 'student') {
         credentials = {
-          identifier: formData.identifier,
-          rollNumber: formData.identifier,
-          email: formData.identifier.includes('@')
-            ? formData.identifier
-            : `${formData.identifier.trim().toLowerCase()}@college.edu`,
-          password: formData.password || 'password123',
+          identifier: formData.identifier.trim(),
+          rollNumber: formData.identifier.trim(),
+          email: formData.identifier.includes('@') ? formData.identifier.trim() : undefined,
+          password: formData.password || 'Password@123',
         };
       } else if (activeRole === 'organizer') {
         credentials = {
-          identifier: formData.identifier,
-          email: formData.identifier,
+          identifier: formData.identifier.trim(),
+          email: formData.identifier.trim(),
           name: 'Faculty / Club Organizer',
-          password: formData.password || 'password123',
+          password: formData.password || 'Password@123',
         };
       } else {
         credentials = {
-          identifier: formData.identifier,
-          email: formData.identifier,
+          identifier: formData.identifier.trim(),
+          email: formData.identifier.trim(),
           name: 'Dr. Amitabh Sen',
-          password: formData.password || 'password123',
+          password: formData.password || 'Password@123',
         };
       }
 
@@ -93,8 +91,10 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 p-4" role="note">
-          <p className="text-sm font-semibold text-blue-950">Local demo mode</p>
-          <p className="mt-1 text-xs leading-5 text-blue-900/80">Credentials are not sent to a server or validated against an account.</p>
+          <p className="text-sm font-semibold text-blue-950">Live Database Authentication</p>
+          <p className="mt-1 text-xs leading-5 text-blue-900/80">
+            Sign in with your university roll number (URN) or college email address. Connected to PostgreSQL.
+          </p>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <button
               type="button"
@@ -102,7 +102,7 @@ export default function LoginPage() {
               className="rounded-lg border border-blue-200 bg-white px-2.5 py-2 text-left text-xs font-semibold text-slate-800 transition-colors hover:border-blue-400 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               Fill student
-              <span className="mt-0.5 block font-normal text-slate-500 truncate">{DEMO_ACCOUNTS.student.rollNumber}</span>
+              <span className="mt-0.5 block font-normal text-slate-500 truncate">student1@eventflow.test</span>
             </button>
             <button
               type="button"
@@ -110,7 +110,7 @@ export default function LoginPage() {
               className="rounded-lg border border-blue-200 bg-white px-2.5 py-2 text-left text-xs font-semibold text-slate-800 transition-colors hover:border-blue-400 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               Fill organizer
-              <span className="mt-0.5 block font-normal text-slate-500 truncate">{DEMO_ACCOUNTS.organizer.email}</span>
+              <span className="mt-0.5 block font-normal text-slate-500 truncate">organizer1@eventflow.test</span>
             </button>
             <button
               type="button"
@@ -118,7 +118,7 @@ export default function LoginPage() {
               className="rounded-lg border border-blue-200 bg-white px-2.5 py-2 text-left text-xs font-semibold text-slate-800 transition-colors hover:border-blue-400 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               Fill admin
-              <span className="mt-0.5 block font-normal text-slate-500 truncate">{DEMO_ACCOUNTS.admin.email}</span>
+              <span className="mt-0.5 block font-normal text-slate-500 truncate">admin@eventflow.test</span>
             </button>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function LoginPage() {
                 required
                 value={formData.identifier}
                 onChange={(event) => setFormData({ ...formData, identifier: event.target.value })}
-                placeholder={activeRole === 'student' ? 'e.g. DEMO-001' : 'name@college.edu'}
+                placeholder={activeRole === 'student' ? 'e.g. E25B070730 or student1@eventflow.test' : 'name@college.edu'}
                 className="ef-input pl-10"
               />
             </div>
@@ -179,7 +179,7 @@ export default function LoginPage() {
                 required
                 value={formData.password}
                 onChange={(event) => setFormData({ ...formData, password: event.target.value })}
-                placeholder="Enter a preview password"
+                placeholder="Enter your account password (e.g. Password@123)"
                 className="ef-input pl-10 pr-12"
               />
               <button

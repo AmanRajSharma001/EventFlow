@@ -308,7 +308,7 @@ export function AuthProvider({ children }) {
         };
         setUser(registeredUser);
         toast.success(
-          `Account created successfully! Note: Academic profile fields will sync once PostgreSQL database schema expands.`
+          `Account created successfully! Welcome to EventFlow.`
         );
         return { success: true, user: registeredUser };
       }
