@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -15,35 +15,54 @@ import EmptyState from '../../components/common/EmptyState';
 import EventCard from '../../components/events/EventCard';
 import { mockCategories, mockCollegeEvents } from '../../data/mockEvents';
 import { isPastEvent, matchesEventQuery } from '../../utils/eventUtils';
-
-const featuredEvent =
-  mockCollegeEvents.find((event) => event.featured && !isPastEvent(event)) || mockCollegeEvents[0];
-
-const campusGroups = (() => {
-  const groups = new Map();
-
-  mockCollegeEvents.filter((event) => !isPastEvent(event)).forEach((event) => {
-    const group = groups.get(event.organizer) || { name: event.organizer, events: [] };
-    group.events.push(event);
-    groups.set(event.organizer, group);
-  });
-
-  return [...groups.values()].slice(0, 4);
-})();
+import eventsService from '../../services/events.service';
 
 export default function LandingPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [featuredImageFailed, setFeaturedImageFailed] = useState(false);
+  const [allEvents, setAllEvents] = useState(mockCollegeEvents);
+
+  useEffect(() => {
+    eventsService
+      .getEvents()
+      .then((res) => {
+        if (Array.isArray(res?.events) && res.events.length > 0) {
+          setAllEvents(res.events);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const featuredEvent = useMemo(() => {
+    return (
+      allEvents.find((event) => event.featured && !isPastEvent(event)) ||
+      allEvents[0] ||
+      mockCollegeEvents[0]
+    );
+  }, [allEvents]);
+
+  const campusGroups = useMemo(() => {
+    const groups = new Map();
+    allEvents
+      .filter((event) => !isPastEvent(event))
+      .forEach((event) => {
+        const orgName = event.organizer || event.coordinator || event.department || 'Campus Group';
+        const group = groups.get(orgName) || { name: orgName, events: [] };
+        group.events.push(event);
+        groups.set(orgName, group);
+      });
+    return [...groups.values()].slice(0, 4);
+  }, [allEvents]);
 
   const filteredEvents = useMemo(() => {
-    return mockCollegeEvents
+    return allEvents
       .filter((event) => isPastEvent(event) === showPastEvents)
       .filter((event) => selectedCategory === 'all' || event.category === selectedCategory)
       .filter((event) => matchesEventQuery(event, searchQuery))
       .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-  }, [searchQuery, selectedCategory, showPastEvents]);
+  }, [allEvents, searchQuery, selectedCategory, showPastEvents]);
 
   const previewEvents = filteredEvents.slice(0, 3);
   const catalogParams = new URLSearchParams();

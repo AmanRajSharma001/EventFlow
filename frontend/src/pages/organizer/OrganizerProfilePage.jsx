@@ -16,7 +16,7 @@ import FormField from '../../components/common/FormField';
 import Badge from '../../components/common/Badge';
 
 export default function OrganizerProfilePage() {
-  const { user, login } = useAuth();
+  const { user, updateStudentProfile } = useAuth();
 
   const [formData, setFormData] = useState({
     name: user?.name || 'Faculty Organizer',
@@ -28,18 +28,18 @@ export default function OrganizerProfilePage() {
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    login('organizer', {
-      name: formData.name,
-      email: formData.email,
-      department: formData.department,
-    });
+    setIsSaving(true);
+    const { name, department, phone } = formData;
+    await updateStudentProfile({ name, department, phone });
+    setIsSaving(false);
     setIsEditing(false);
   };
 
@@ -54,11 +54,6 @@ export default function OrganizerProfilePage() {
       bio: 'Overseeing annual campus hackathons, technical conferences, and student project showcases across university departments.',
     };
     setFormData(restored);
-    login('organizer', {
-      name: demo.name,
-      email: demo.email,
-      department: demo.department,
-    });
     setIsEditing(false);
   };
 
@@ -108,13 +103,22 @@ export default function OrganizerProfilePage() {
         </div>
       </div>
 
-      {/* Local storage note banner */}
-      <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-xs text-blue-900 leading-relaxed">
-        <Info className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
-        <div>
-          <strong className="font-semibold text-blue-950">Local Browser Session Notice:</strong> Organizer profile changes are stored in your active browser session. No database changes are committed during this frontend development phase.
+      {/* Session info banner */}
+      {user?.authType === 'live' ? (
+        <div className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-xs text-emerald-900 leading-relaxed">
+          <Info className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
+          <div>
+            <strong className="font-semibold text-emerald-950">Connected to your account:</strong> Profile changes are saved to the EventFlow database and persist across devices.
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50/60 p-4 text-xs text-amber-900 leading-relaxed">
+          <Info className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+          <div>
+            <strong className="font-semibold text-amber-950">Demo Session:</strong> Profile changes are saved to your browser session only and will not persist after logout.
+          </div>
+        </div>
+      )}
 
       {/* Profile Overview Card */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
@@ -241,8 +245,9 @@ export default function OrganizerProfilePage() {
                 variant="primary"
                 size="md"
                 icon={Save}
+                disabled={isSaving}
               >
-                Save Organizer Details
+                {isSaving ? 'Saving…' : 'Save Organizer Details'}
               </Button>
             </div>
           )}

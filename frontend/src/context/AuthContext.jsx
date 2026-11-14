@@ -8,6 +8,7 @@ import {
 } from '../data/mockStudentData';
 import { AuthContext } from './authContextDef';
 import authService from '../services/auth.service';
+import registrationsService from '../services/registrations.service';
 import { isDatabasePendingError, getPendingDependencyInfo } from '../services/dbStatus';
 
 const USER_STORAGE_KEY = 'eventflow_user';
@@ -105,6 +106,25 @@ export function AuthProvider({ children }) {
             isDemoSession: false,
             authType: 'live',
           }));
+          if (liveUser.role === 'student') {
+            registrationsService
+              .getMyRegistrations()
+              .then((regs) => {
+                if (isMounted && Array.isArray(regs)) {
+                  const confirmed = regs
+                    .filter((r) => r.status === 'CONFIRMED')
+                    .map((r) => r.eventId || r.event?.id)
+                    .filter(Boolean);
+                  const cancelled = regs
+                    .filter((r) => r.status === 'CANCELLED')
+                    .map((r) => r.eventId || r.event?.id)
+                    .filter(Boolean);
+                  setRegisteredEventIds(confirmed);
+                  setCancelledEventIds(cancelled);
+                }
+              })
+              .catch(() => {});
+          }
         }
       })
       .catch((error) => {
@@ -167,6 +187,25 @@ export function AuthProvider({ children }) {
           authType: 'live',
         };
         setUser(sessionUser);
+        if (sessionUser.role === 'student') {
+          registrationsService
+            .getMyRegistrations()
+            .then((regs) => {
+              if (Array.isArray(regs)) {
+                const confirmed = regs
+                  .filter((r) => r.status === 'CONFIRMED')
+                  .map((r) => r.eventId || r.event?.id)
+                  .filter(Boolean);
+                const cancelled = regs
+                  .filter((r) => r.status === 'CANCELLED')
+                  .map((r) => r.eventId || r.event?.id)
+                  .filter(Boolean);
+                setRegisteredEventIds(confirmed);
+                setCancelledEventIds(cancelled);
+              }
+            })
+            .catch(() => {});
+        }
         toast.success(`Welcome back, ${sessionUser.name}!`);
         return { success: true, user: sessionUser };
       }
@@ -310,18 +349,43 @@ export function AuthProvider({ children }) {
     return { success: true, user: newStudent, isDemo: true };
   };
 
-  const updateStudentProfile = (profileData) => {
+  const updateStudentProfile = async (profileData) => {
     if (!user) return false;
-    const updated = {
-      ...user,
-      ...profileData,
-    };
+
+    if (user.authType === 'live') {
+      try {
+        const { name, rollNumber, department, semester, phone } = profileData;
+        const updatedUser = await authService.updateProfile({
+          name,
+          rollNumber,
+          department,
+          semester,
+          phone,
+        });
+        const merged = {
+          ...user,
+          ...updatedUser,
+          isDemoSession: false,
+          authType: 'live',
+        };
+        setUser(merged);
+        toast.success('Profile saved to your account.');
+        return merged;
+      } catch (error) {
+        const msg =
+          error?.response?.data?.message || 'Profile update failed. Please try again.';
+        toast.error(msg);
+        return false;
+      }
+    }
+
+    const updated = { ...user, ...profileData };
     setUser(updated);
-    toast.success('Profile details updated (local browser session).');
+    toast.success('Profile updated in this session.');
     return updated;
   };
 
-  const registerForEvent = (eventId, eventTitle) => {
+  const registerForEvent = async (eventId, eventTitle) => {
     if (!user) {
       toast.error('Please sign in with your student credentials to register.');
       return false;
@@ -333,6 +397,34 @@ export function AuthProvider({ children }) {
     if (registeredEventIds.includes(eventId)) {
       toast.error('You are already registered for this event!');
       return false;
+    }
+
+    if (user.authType === 'live') {
+      try {
+        await registrationsService.registerForEvent(eventId);
+        setRegisteredEventIds((prev) => [...prev, eventId]);
+        setCancelledEventIds((prev) => prev.filter((id) => id !== eventId));
+
+        setActivityItems((prev) => [
+          {
+            id: 'act-' + Date.now(),
+            type: 'registration',
+            title: `Registered for ${eventTitle}`,
+            description: 'Confirmed seat reservation saved in database.',
+            timestamp: 'Just now',
+            eventId,
+          },
+          ...prev,
+        ]);
+
+        toast.success(`Registered successfully for ${eventTitle}!`);
+        return true;
+      } catch (error) {
+        const errorMsg =
+          error?.response?.data?.message || 'Failed to register for event.';
+        toast.error(errorMsg);
+        return false;
+      }
     }
 
     setRegisteredEventIds((prev) => [...prev, eventId]);
@@ -360,7 +452,35 @@ export function AuthProvider({ children }) {
     toast.success(`Preview registration withdrawn for ${eventTitle}.`);
   };
 
-  const cancelRegistration = (eventId, eventTitle, reason = 'Student voluntary cancellation') => {
+  const cancelRegistration = async (eventId, eventTitle, reason = 'Student voluntary cancellation') => {
+    if (user?.authType === 'live') {
+      try {
+        await registrationsService.cancelRegistration(eventId, reason);
+        setRegisteredEventIds((prev) => prev.filter((id) => id !== eventId));
+        setCancelledEventIds((prev) => (prev.includes(eventId) ? prev : [...prev, eventId]));
+
+        setActivityItems((prev) => [
+          {
+            id: 'act-' + Date.now(),
+            type: 'cancellation',
+            title: `Cancelled registration for ${eventTitle}`,
+            description: `Reason: ${reason}. Seat released back to capacity pool.`,
+            timestamp: 'Just now',
+            eventId,
+          },
+          ...prev,
+        ]);
+
+        toast.success(`Registration cancelled for ${eventTitle}.`);
+        return true;
+      } catch (error) {
+        const errorMsg =
+          error?.response?.data?.message || 'Failed to cancel registration.';
+        toast.error(errorMsg);
+        return false;
+      }
+    }
+
     setRegisteredEventIds((prev) => prev.filter((id) => id !== eventId));
     setCancelledEventIds((prev) => (prev.includes(eventId) ? prev : [...prev, eventId]));
 
@@ -399,6 +519,10 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     localStorage.removeItem(USER_STORAGE_KEY);
+    localStorage.removeItem(REGISTERED_EVENTS_STORAGE_KEY);
+    localStorage.removeItem(CANCELLED_EVENTS_STORAGE_KEY);
+    setRegisteredEventIds([]);
+    setCancelledEventIds([]);
     setUser(null);
     toast.success('Signed out successfully.');
   };

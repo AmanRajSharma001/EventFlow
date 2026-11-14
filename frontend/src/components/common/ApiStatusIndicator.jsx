@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Database, RefreshCw, Server, AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Database, RefreshCw, Server, AlertCircle, CheckCircle2, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 import systemService from '../../services/system.service';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * ApiStatusIndicator
@@ -9,6 +10,7 @@ import systemService from '../../services/system.service';
  * Accurately differentiates between server connectivity and database integration state.
  */
 export default function ApiStatusIndicator({ className = '' }) {
+  const { user } = useAuth();
   const [state, setState] = useState({
     status: 'unchecked', // 'unchecked' | 'server_offline' | 'db_pending' | 'ready' | 'error'
     serverOnline: false,
@@ -199,6 +201,31 @@ export default function ApiStatusIndicator({ className = '' }) {
                   : state.status === 'db_pending'
                   ? 'Pending Setup'
                   : 'Disconnected'}
+              </span>
+            </div>
+
+            {/* Authentication Configured */}
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
+                Authentication
+              </span>
+              <span
+                className={`font-semibold ${
+                  user?.authType === 'live'
+                    ? 'text-emerald-700'
+                    : user
+                    ? 'text-amber-700'
+                    : 'text-slate-600'
+                }`}
+              >
+                {user?.authType === 'live'
+                  ? 'Live Database Auth'
+                  : user
+                  ? 'Demo Session Auth'
+                  : state.dbReady
+                  ? 'Database Backed'
+                  : 'Fallback Active'}
               </span>
             </div>
 

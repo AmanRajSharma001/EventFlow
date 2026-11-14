@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays,
@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { mockCollegeEvents } from '../../data/mockEvents';
 import { generateTicketData } from '../../data/mockStudentData';
+import registrationsService from '../../services/registrations.service';
 import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
 import TicketModal from '../../components/student/TicketModal';
@@ -24,9 +25,47 @@ export default function StudentTicketsPage() {
   } = useAuth();
 
   const [activeTicket, setActiveTicket] = useState(null);
+  const [liveRegistrations, setLiveRegistrations] = useState(null);
+
+  useEffect(() => {
+    if (user?.authType === 'live') {
+      registrationsService
+        .getMyRegistrations()
+        .then((regs) => {
+          if (Array.isArray(regs)) {
+            setLiveRegistrations(regs);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user?.authType]);
 
   // Generate ticket objects for all active registrations
   const tickets = useMemo(() => {
+    if (liveRegistrations) {
+      return liveRegistrations
+        .filter((reg) => reg.status === 'CONFIRMED')
+        .map((reg) =>
+          generateTicketData(
+            {
+              id: reg.event?.id || reg.id,
+              registrationId: reg.id,
+              title: reg.event?.title || 'Campus Event',
+              category: reg.event?.category || 'General',
+              startDate: reg.event?.startDate,
+              venue: reg.event?.location || 'Campus Auditorium',
+              organizer:
+                reg.event?.coordinator ||
+                reg.event?.department ||
+                'College Council',
+              qrToken: reg.qrToken,
+              createdAt: reg.createdAt,
+            },
+            user
+          )
+        );
+    }
+
     return mockCollegeEvents
       .filter(
         (event) =>
@@ -34,7 +73,7 @@ export default function StudentTicketsPage() {
           !cancelledEventIds.includes(event.id)
       )
       .map((event) => generateTicketData(event, user));
-  }, [registeredEventIds, cancelledEventIds, user]);
+  }, [liveRegistrations, registeredEventIds, cancelledEventIds, user]);
 
   return (
     <div className="space-y-6">

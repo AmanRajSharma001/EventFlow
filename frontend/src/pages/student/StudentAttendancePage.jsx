@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays,
@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { mockCollegeEvents } from '../../data/mockEvents';
 import { calculateStudentStats } from '../../data/mockStudentData';
+import attendanceService from '../../services/attendance.service';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
@@ -23,20 +24,71 @@ import StatCard from '../../components/student/StatCard';
 
 export default function StudentAttendancePage() {
   const {
+    user,
     registeredEventIds = [],
     cancelledEventIds = [],
     attendanceRecords = [],
   } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [liveAttendance, setLiveAttendance] = useState(null);
+
+  useEffect(() => {
+    if (user?.authType === 'live') {
+      attendanceService
+        .getMyAttendance()
+        .then((records) => {
+          if (Array.isArray(records)) {
+            setLiveAttendance(records);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user?.authType]);
 
   // Calculate statistics
   const stats = useMemo(() => {
+    if (liveAttendance) {
+      return {
+        totalRegistered: registeredEventIds.length + liveAttendance.length,
+        upcomingCount: registeredEventIds.length,
+        attendedCount: liveAttendance.length,
+        attendanceRate: registeredEventIds.length + liveAttendance.length > 0
+          ? Math.round((liveAttendance.length / (registeredEventIds.length + liveAttendance.length)) * 100)
+          : 100,
+        totalPoints: liveAttendance.length * 25,
+      };
+    }
     return calculateStudentStats(registeredEventIds, cancelledEventIds, attendanceRecords);
-  }, [registeredEventIds, cancelledEventIds, attendanceRecords]);
+  }, [liveAttendance, registeredEventIds, cancelledEventIds, attendanceRecords]);
 
-  // Merge attendance records with event metadata from mockCollegeEvents
+  // Merge attendance records with event metadata
   const enrichedRecords = useMemo(() => {
+    if (liveAttendance) {
+      return liveAttendance.map((rec) => ({
+        id: rec.id,
+        eventId: rec.event?.id,
+        eventTitle: rec.event?.title || 'Campus Event',
+        category: rec.event?.category || 'General',
+        date: rec.attendance?.checkedInAt
+          ? new Date(rec.attendance.checkedInAt).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })
+          : 'Verified Check-in',
+        venue: rec.event?.location || 'Campus Auditorium',
+        organizer: rec.event?.coordinator || 'Faculty Coordinator',
+        status: 'Present',
+        checkInTime: rec.attendance?.checkedInAt
+          ? new Date(rec.attendance.checkedInAt).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : 'Verified Check-in',
+      }));
+    }
+
     return attendanceRecords.map((rec) => {
       const event = mockCollegeEvents.find((e) => e.id === rec.eventId);
       return {
@@ -48,7 +100,7 @@ export default function StudentAttendancePage() {
         organizer: event?.organizer || 'College Council',
       };
     });
-  }, [attendanceRecords]);
+  }, [liveAttendance, attendanceRecords]);
 
   // Filter records by search
   const filteredRecords = useMemo(() => {

@@ -138,25 +138,25 @@ export function generateTicketData(event, user) {
   if (!event) return null;
   
   const hashSeed = `${event.id}-${user?.rollNumber || 'DEMO'}`.toUpperCase();
-  const regId = `EF-2026-${Math.abs(hashSeed.split('').reduce((acc, c) => ((acc << 5) - acc) + c.charCodeAt(0), 0) % 9000 + 1000)}`;
+  const regId = event.registrationId || `EF-2026-${Math.abs(hashSeed.split('').reduce((acc, c) => ((acc << 5) - acc) + c.charCodeAt(0), 0) % 9000 + 1000)}`;
 
   return {
     ticketNumber: regId,
     eventId: event.id,
     eventTitle: event.title,
     eventCategory: event.category,
-    date: event.date,
-    time: event.time,
-    venue: event.venue,
-    organizer: event.organizer,
-    studentName: user?.name || 'Demo Student',
-    rollNumber: user?.rollNumber || 'DEMO-001',
-    department: user?.department || 'Computer Science & Engineering',
-    semester: user?.semester || '6th Semester',
-    email: user?.email || 'student@example.com',
-    qrPayload: `EVENTFLOW-VALIDATE:${regId}:${event.id}:${user?.rollNumber || 'DEMO-001'}`,
-    issuedAt: 'Nov 10, 2026 · Verified Preview Ticket',
-    gate: event.venue?.includes('Block') ? 'Gate 4 North' : 'Main Entrance',
-    status: 'Confirmed',
+    date: event.date || (event.startDate ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Upcoming'),
+    time: event.time || (event.startDate ? new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD'),
+    venue: event.venue || event.location || 'Campus Auditorium',
+    organizer: event.organizer || event.coordinator || event.department || 'College Council',
+    studentName: user?.name || 'Student',
+    rollNumber: user?.rollNumber || 'Not Set',
+    department: user?.department || 'Department',
+    semester: user?.semester || 'Semester',
+    email: user?.email || '',
+    qrPayload: event.qrToken || `EVENTFLOW-VALIDATE:${regId}:${event.id}:${user?.rollNumber || 'DEMO-001'}`,
+    issuedAt: event.createdAt ? new Date(event.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Verified Event Pass',
+    gate: (event.venue || event.location || '').includes('Block') ? 'Gate 4 North' : 'Main Entrance',
+    status: event.regStatus || 'Confirmed',
   };
 }

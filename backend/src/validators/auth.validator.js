@@ -25,7 +25,7 @@ export const registerSchema = z.object({
     .string()
     .optional()
     .refine(
-      (val) => val === undefined || val === ROLES.STUDENT,
+      (val) => val === undefined || val.toUpperCase() === ROLES.STUDENT,
       {
         message: "Public registration is only permitted for STUDENT. ADMIN and ORGANIZER roles cannot be self-assigned"
       }

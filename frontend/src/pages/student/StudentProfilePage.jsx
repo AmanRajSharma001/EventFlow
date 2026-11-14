@@ -51,14 +51,18 @@ export default function StudentProfilePage() {
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    updateStudentProfile(formData);
+    setIsSaving(true);
+    const { name, rollNumber, department, semester, phone } = formData;
+    await updateStudentProfile({ name, rollNumber, department, semester, phone });
+    setIsSaving(false);
     setIsEditing(false);
   };
 
@@ -124,13 +128,22 @@ export default function StudentProfilePage() {
         </div>
       </div>
 
-      {/* Local storage note banner */}
-      <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-xs text-blue-900 leading-relaxed">
-        <Info className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
-        <div>
-          <strong className="font-semibold text-blue-950">Local Browser Session Notice:</strong> Profile updates made here are saved to your browser’s local preview session. Changes will not be sent to a remote database until backend integration is connected.
+      {/* Session info banner */}
+      {user?.authType === 'live' ? (
+        <div className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-xs text-emerald-900 leading-relaxed">
+          <Info className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
+          <div>
+            <strong className="font-semibold text-emerald-950">Connected to your account:</strong> Profile changes are saved to the EventFlow database and persist across devices.
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50/60 p-4 text-xs text-amber-900 leading-relaxed">
+          <Info className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+          <div>
+            <strong className="font-semibold text-amber-950">Demo Session:</strong> Profile changes are saved to your browser session only and will not persist after logout.
+          </div>
+        </div>
+      )}
 
       {/* Profile Overview Card */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
@@ -297,8 +310,9 @@ export default function StudentProfilePage() {
                 variant="primary"
                 size="md"
                 icon={Save}
+                disabled={isSaving}
               >
-                Save Profile Changes
+                {isSaving ? 'Saving\u2026' : 'Save Profile Changes'}
               </Button>
             </div>
           )}
@@ -318,9 +332,9 @@ export default function StudentProfilePage() {
           <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-4 text-xs">
             <div>
               <p className="font-semibold text-slate-900">Authentication Mode</p>
-              <p className="text-slate-500">Local Browser Session (Demo Mode)</p>
+              <p className="text-slate-500">{user?.authType === 'live' ? 'EventFlow Database (Live)' : 'Local Browser Session (Demo Mode)'}</p>
             </div>
-            <Badge variant="blue">Local Demo</Badge>
+            <Badge variant={user?.authType === 'live' ? 'success' : 'blue'}>{user?.authType === 'live' ? 'Live Account' : 'Local Demo'}</Badge>
           </div>
 
           <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-4 text-xs">

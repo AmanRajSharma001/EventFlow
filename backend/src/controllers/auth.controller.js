@@ -127,6 +127,30 @@ export const getMe = async (req, res, next) => {
       });
     }
 
+    if (isDatabaseReady() && prisma?.user) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          rollNumber: true,
+          department: true,
+          semester: true,
+          phone: true,
+          createdAt: true
+        }
+      });
+
+      if (dbUser) {
+        return res.status(200).json({
+          success: true,
+          data: { user: dbUser }
+        });
+      }
+    }
+
     return res.status(200).json({
       success: true,
       data: {
@@ -137,6 +161,57 @@ export const getMe = async (req, res, next) => {
           role: req.user.role
         }
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProfile = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "User authentication required"
+      });
+    }
+
+    const { name, rollNumber, department, semester, phone } = req.body;
+
+    if (!isDatabaseReady() || !prisma?.user) {
+      return res.status(503).json({
+        success: false,
+        message: "Database service unavailable: PostgreSQL connection not established."
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        ...(name !== undefined && { name: name.trim() }),
+        ...(rollNumber !== undefined && { rollNumber: rollNumber.trim() }),
+        ...(department !== undefined && { department: department.trim() }),
+        ...(semester !== undefined && { semester: semester.trim() }),
+        ...(phone !== undefined && { phone: phone.trim() }),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        rollNumber: true,
+        department: true,
+        semester: true,
+        phone: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: { user: updatedUser }
     });
   } catch (error) {
     next(error);

@@ -29,8 +29,23 @@ function loadEnvironment() {
 
 loadEnvironment();
 
+function validateEnvironment() {
+  const missing = [];
+  if (!process.env.DATABASE_URL) {
+    missing.push("DATABASE_URL");
+  }
+  if (process.env.NODE_ENV === "production" && (!process.env.JWT_SECRET || process.env.JWT_SECRET === "eventflow_development_secret_key_change_in_production")) {
+    missing.push("JWT_SECRET (secure production secret required)");
+  }
+  if (missing.length > 0) {
+    console.warn(`[Config Notice] Missing or unconfigured environment variables: ${missing.join(", ")}`);
+  }
+}
+
+validateEnvironment();
+
 export const config = {
-  port: process.env.PORT || 5001,
+  port: parseInt(process.env.PORT, 10) || 5001,
   nodeEnv: process.env.NODE_ENV || "development",
   jwtSecret: process.env.JWT_SECRET || "eventflow_development_secret_key_change_in_production",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",

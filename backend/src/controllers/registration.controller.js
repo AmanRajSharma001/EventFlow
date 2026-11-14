@@ -171,7 +171,10 @@ export const getMyRegistrations = async (req, res, next) => {
               startDate: true,
               endDate: true,
               location: true,
-              status: true
+              status: true,
+              imageUrl: true,
+              department: true,
+              coordinator: true
             }
           }
         }
@@ -263,12 +266,24 @@ export const cancelRegistration = async (req, res, next) => {
     const { reason } = req.body;
 
     if (isDatabaseReady() && prisma?.registration) {
-      const registration = await prisma.registration.findUnique({
+      let registration = await prisma.registration.findUnique({
         where: { id: registrationId },
         include: {
           event: true
         }
       });
+
+      if (!registration && req.user?.id) {
+        registration = await prisma.registration.findFirst({
+          where: {
+            eventId: registrationId,
+            studentId: req.user.id
+          },
+          include: {
+            event: true
+          }
+        });
+      }
 
       if (!registration) {
         return res.status(404).json({

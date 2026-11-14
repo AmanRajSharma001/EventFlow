@@ -295,30 +295,47 @@ cd ..
 
 ## 13. Running the Project
 
-### Running in Development
+### 13. Deployment Modes
 
-You can run individual services or start the entire desktop application:
+EventFlow supports three operating modes with identical business logic and database persistence:
 
-#### Option A: Running the Electron Desktop App in Development
-Starts the backend, frontend dev server, and Electron window together:
-
+#### Mode A — Connected Website (Production Web Deployment)
+The frontend website runs independently in any standard browser and communicates with a remote or hosted Express API:
 ```bash
-npm run dev
+# Frontend environment: frontend/.env
+VITE_API_BASE_URL=https://api.eventflow.college.edu/api
+
+# Build production web bundle
+npm run build:frontend
 ```
+- Frontend connects to the configured production API via Axios with automatic Bearer token injection.
+- Backend handles CORS with origin allowlisting via `CORS_ORIGIN`.
+- Session tokens are stored securely in browser `localStorage`.
+- All CRUD operations persist to PostgreSQL via Prisma.
 
-#### Option B: Running Services Separately
+#### Mode B — Independent Local Development
+Frontend and backend develop independently without requiring Electron:
+```bash
+# Terminal 1: Start Express backend with Nodemon on port 5001
+npm run dev:backend
 
-1. **Start the backend server**:
-   ```bash
-   npm run dev:backend
-   # Server runs at http://localhost:5001
-   ```
+# Terminal 2: Start React Vite frontend dev server on port 5173
+npm run dev:frontend
+```
+- Backend connects to local PostgreSQL.
+- Frontend communicates with `http://localhost:5001/api`.
+- Hot module reloading (HMR) is active on both tiers.
 
-2. **Start the React frontend**:
-   ```bash
-   npm run dev:frontend
-   # Web interface available at http://localhost:5173
-   ```
+#### Mode C — Electron macOS DMG (Standalone Desktop App)
+The packaged macOS desktop application runs with an embedded Express backend:
+```bash
+# Package DMG installer
+npm run dist:mac
+# Produces release/EventFlow-macOS-1.0.2.dmg
+```
+- Electron spawns the packaged backend child process on port 5001.
+- Database configuration is read from `~/Library/Application Support/EventFlow/.env`.
+- Frontend is served locally with `file://` protocol and HashRouter.
 
 ---
 
@@ -331,7 +348,7 @@ npm run dist:mac
 ```
 
 The installer will be generated in the `release/` folder:
-- **Installer file**: `release/EventFlow-macOS-1.0.1.dmg`
+- **Installer file**: `release/EventFlow-macOS-1.0.2.dmg` (v1.0.0 and v1.0.1 preserved)
 - **Architecture**: Apple Silicon ARM64
 
 ### Database Configuration for Packaged Desktop Mode
@@ -371,7 +388,7 @@ To ensure the packaged desktop application securely connects to your PostgreSQL 
 EventFlow includes comprehensive test suites across backend API routes and Prisma database models:
 
 ```bash
-# Run backend Express API tests (38 tests: auth, events, e2e)
+# Run backend Express API tests (39 tests: auth, events, e2e)
 npm run test:backend
 
 # Run Prisma database model & concurrency tests (39 tests)
@@ -403,7 +420,8 @@ All API endpoints are prefixed with `/api`:
 ### Authentication (`/api/auth`)
 - `POST /api/auth/register` — Register a new student account
 - `POST /api/auth/login` — Log in and receive JWT token
-- `GET /api/auth/me` — Retrieve current authenticated profile
+- `GET /api/auth/me` — Retrieve current authenticated profile (from PostgreSQL)
+- `PATCH /api/auth/me` — Update student/organizer profile details (persisted to PostgreSQL)
 
 ### Events (`/api/events`)
 - `GET /api/events` — Browse published events (filters: category, search, page)

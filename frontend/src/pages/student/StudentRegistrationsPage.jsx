@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays,
@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { mockCollegeEvents } from '../../data/mockEvents';
 import { generateTicketData } from '../../data/mockStudentData';
+import registrationsService from '../../services/registrations.service';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import EmptyState from '../../components/common/EmptyState';
@@ -31,6 +32,24 @@ export default function StudentRegistrationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [eventToCancel, setEventToCancel] = useState(null);
+  const [liveRegistrations, setLiveRegistrations] = useState(null);
+
+  const fetchLiveRegistrations = useCallback(async () => {
+    if (user?.authType === 'live') {
+      try {
+        const regs = await registrationsService.getMyRegistrations();
+        if (Array.isArray(regs)) {
+          setLiveRegistrations(regs);
+        }
+      } catch {
+        // Fallback remains
+      }
+    }
+  }, [user?.authType]);
+
+  useEffect(() => {
+    fetchLiveRegistrations();
+  }, [fetchLiveRegistrations]);
 
   // Group events by registration status
   const { upcomingList, pastList, cancelledList, allList } = useMemo(() => {
@@ -39,23 +58,75 @@ export default function StudentRegistrationsPage() {
     const cancelled = [];
     const all = [];
 
-    mockCollegeEvents.forEach((event) => {
-      const isRegistered = registeredEventIds.includes(event.id);
-      const isCancelled = cancelledEventIds.includes(event.id);
+    if (liveRegistrations) {
+      liveRegistrations.forEach((reg) => {
+        const eventItem = {
+          id: reg.event?.id || reg.id,
+          registrationId: reg.id,
+          title: reg.event?.title || 'Campus Event',
+          category: reg.event?.category || 'General',
+          date: reg.event?.startDate
+            ? new Date(reg.event.startDate).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })
+            : 'Upcoming',
+          startDate: reg.event?.startDate,
+          endDate: reg.event?.endDate,
+          time: reg.event?.startDate
+            ? new Date(reg.event.startDate).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            : 'TBD',
+          venue: reg.event?.location || 'Campus Auditorium',
+          location: reg.event?.location || 'Campus Auditorium',
+          organizer:
+            reg.event?.coordinator || reg.event?.department || 'College Council',
+          imageUrl:
+            reg.event?.imageUrl ||
+            'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80',
+          regStatus:
+            reg.status === 'CONFIRMED'
+              ? new Date(reg.event?.endDate || reg.event?.startDate) < new Date()
+                ? 'Completed'
+                : 'Confirmed'
+              : 'Cancelled',
+          qrToken: reg.qrToken,
+          notes: reg.notes,
+        };
 
-      if (isCancelled) {
-        cancelled.push({ ...event, regStatus: 'Cancelled' });
-        all.push({ ...event, regStatus: 'Cancelled' });
-      } else if (isRegistered) {
-        if (event.isPast || event.status === 'Completed') {
-          past.push({ ...event, regStatus: 'Completed' });
-          all.push({ ...event, regStatus: 'Completed' });
+        if (eventItem.regStatus === 'Cancelled') {
+          cancelled.push(eventItem);
+          all.push(eventItem);
+        } else if (eventItem.regStatus === 'Completed') {
+          past.push(eventItem);
+          all.push(eventItem);
         } else {
-          upcoming.push({ ...event, regStatus: 'Confirmed' });
-          all.push({ ...event, regStatus: 'Confirmed' });
+          upcoming.push(eventItem);
+          all.push(eventItem);
         }
-      }
-    });
+      });
+    } else {
+      mockCollegeEvents.forEach((event) => {
+        const isRegistered = registeredEventIds.includes(event.id);
+        const isCancelled = cancelledEventIds.includes(event.id);
+
+        if (isCancelled) {
+          cancelled.push({ ...event, regStatus: 'Cancelled' });
+          all.push({ ...event, regStatus: 'Cancelled' });
+        } else if (isRegistered) {
+          if (event.isPast || event.status === 'Completed') {
+            past.push({ ...event, regStatus: 'Completed' });
+            all.push({ ...event, regStatus: 'Completed' });
+          } else {
+            upcoming.push({ ...event, regStatus: 'Confirmed' });
+            all.push({ ...event, regStatus: 'Confirmed' });
+          }
+        }
+      });
+    }
 
     return {
       upcomingList: upcoming,
@@ -63,7 +134,7 @@ export default function StudentRegistrationsPage() {
       cancelledList: cancelled,
       allList: all,
     };
-  }, [registeredEventIds, cancelledEventIds]);
+  }, [liveRegistrations, registeredEventIds, cancelledEventIds]);
 
   // Filter based on active tab and search query
   const displayedList = useMemo(() => {
@@ -88,10 +159,12 @@ export default function StudentRegistrationsPage() {
     setSelectedTicket(ticket);
   };
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = async () => {
     if (!eventToCancel) return;
-    cancelRegistration(eventToCancel.id, eventToCancel.title);
+    const targetId = eventToCancel.registrationId || eventToCancel.id;
+    await cancelRegistration(targetId, eventToCancel.title);
     setEventToCancel(null);
+    fetchLiveRegistrations();
   };
 
   const tabs = [

@@ -17,19 +17,24 @@ const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
 
+    const configuredOrigins = (config.corsOrigin || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     const allowedOrigins = [
-      config.corsOrigin,
+      ...configuredOrigins,
       "http://localhost:5173",
       "http://localhost:3000",
       "http://127.0.0.1:5173",
       "http://127.0.0.1:3000"
     ];
 
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin) || config.nodeEnv !== "production") {
       return callback(null, true);
     }
 
-    return callback(null, true);
+    return callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

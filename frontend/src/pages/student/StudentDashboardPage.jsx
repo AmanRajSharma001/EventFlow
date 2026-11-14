@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays,
@@ -14,6 +14,8 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { mockCollegeEvents } from '../../data/mockEvents';
 import { calculateStudentStats, generateTicketData } from '../../data/mockStudentData';
+import registrationsService from '../../services/registrations.service';
+import eventsService from '../../services/events.service';
 import StatCard from '../../components/student/StatCard';
 import TicketModal from '../../components/student/TicketModal';
 import Button from '../../components/common/Button';
@@ -30,14 +32,76 @@ export default function StudentDashboardPage() {
   } = useAuth();
 
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [liveRegistrations, setLiveRegistrations] = useState(null);
+  const [liveEvents, setLiveEvents] = useState(null);
+
+  useEffect(() => {
+    if (user?.authType === 'live') {
+      registrationsService
+        .getMyRegistrations()
+        .then((regs) => {
+          if (Array.isArray(regs)) setLiveRegistrations(regs);
+        })
+        .catch(() => {});
+
+      eventsService
+        .getEvents()
+        .then((res) => {
+          if (Array.isArray(res?.events)) setLiveEvents(res.events);
+        })
+        .catch(() => {});
+    }
+  }, [user?.authType]);
 
   // Compute student stats dynamically
   const stats = useMemo(() => {
+    if (liveRegistrations) {
+      const confirmed = liveRegistrations.filter((r) => r.status === 'CONFIRMED');
+      return {
+        totalRegistered: confirmed.length,
+        upcomingCount: confirmed.length,
+        attendedCount: 0,
+        attendanceRate: 100,
+        totalPoints: confirmed.length * 20,
+      };
+    }
     return calculateStudentStats(registeredEventIds, cancelledEventIds, attendanceRecords);
-  }, [registeredEventIds, cancelledEventIds, attendanceRecords]);
+  }, [liveRegistrations, registeredEventIds, cancelledEventIds, attendanceRecords]);
 
   // Registered upcoming events
   const upcomingRegisteredEvents = useMemo(() => {
+    if (liveRegistrations) {
+      return liveRegistrations
+        .filter((r) => r.status === 'CONFIRMED')
+        .map((r) => ({
+          id: r.event?.id || r.id,
+          registrationId: r.id,
+          title: r.event?.title || 'Campus Event',
+          category: r.event?.category || 'General',
+          startDate: r.event?.startDate,
+          date: r.event?.startDate
+            ? new Date(r.event.startDate).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })
+            : 'Upcoming',
+          time: r.event?.startDate
+            ? new Date(r.event.startDate).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            : 'TBD',
+          venue: r.event?.location || 'Campus Auditorium',
+          organizer:
+            r.event?.coordinator || r.event?.department || 'College Council',
+          imageUrl:
+            r.event?.imageUrl ||
+            'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80',
+          qrToken: r.qrToken,
+        }));
+    }
+
     return mockCollegeEvents.filter(
       (event) =>
         registeredEventIds.includes(event.id) &&
@@ -45,10 +109,19 @@ export default function StudentDashboardPage() {
         !event.isPast &&
         event.status !== 'Completed'
     );
-  }, [registeredEventIds, cancelledEventIds]);
+  }, [liveRegistrations, registeredEventIds, cancelledEventIds]);
 
   // Recommended events (not registered, not past)
   const recommendedEvents = useMemo(() => {
+    if (liveEvents && liveEvents.length > 0) {
+      const registeredIds = liveRegistrations
+        ? liveRegistrations.map((r) => r.eventId || r.event?.id)
+        : registeredEventIds;
+      return liveEvents
+        .filter((event) => !registeredIds.includes(event.id))
+        .slice(0, 3);
+    }
+
     return mockCollegeEvents
       .filter(
         (event) =>
@@ -57,7 +130,7 @@ export default function StudentDashboardPage() {
           event.status !== 'Completed'
       )
       .slice(0, 3);
-  }, [registeredEventIds]);
+  }, [liveEvents, liveRegistrations, registeredEventIds]);
 
   const handleOpenTicket = (event) => {
     const ticketData = generateTicketData(event, user);

@@ -51,6 +51,19 @@ export const authService = {
     const rawUser = response.data?.data?.user;
     return adaptUser(rawUser);
   },
+
+  /**
+   * Update the current authenticated user's profile fields.
+   * Endpoint: PATCH /api/auth/me
+   * Accepts: { name, rollNumber, department, semester, phone }
+   * @param {object} profileData
+   * @returns {Promise<object>} Updated user object
+   */
+  async updateProfile(profileData) {
+    const response = await api.patch('/auth/me', profileData);
+    const rawUser = response.data?.data?.user;
+    return adaptUser(rawUser);
+  },
 };
 
 export default authService;
