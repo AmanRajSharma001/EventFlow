@@ -1,137 +1,228 @@
 @import "tailwindcss";
 
+/* ============================================================
+   EventFlow Design System — Premium SaaS Aesthetic
+   Primary: Blue (#2563EB) | Background: White | Text: Slate-950
+   ============================================================ */
+
 @layer base {
   :root {
     --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --ef-ink: #101b32;
-    --ef-muted: #64748b;
-    --ef-line: #dce2eb;
-    --ef-paper: #f6f7f9;
-    --ef-surface: #ffffff;
-    --ef-accent: #4f46e5;
-    --ef-accent-strong: #4338ca;
-    --ef-success: #047857;
-    --ef-warning: #b45309;
-    --ef-danger: #be123c;
-    --ef-focus: rgb(79 70 229 / 32%);
-    --ef-shadow: 0 18px 48px rgb(16 27 50 / 8%);
+
+    /* Brand Colors */
+    --ef-blue: #2563EB;
+    --ef-blue-dark: #1D4ED8;
+    --ef-blue-mid: #3B82F6;
+    --ef-blue-light: #EFF6FF;
+    --ef-blue-pale: #DBEAFE;
+
+    /* Text Colors */
+    --ef-ink: #0F172A;
+    --ef-ink-80: #1E293B;
+    --ef-muted: #64748B;
+    --ef-subtle: #94A3B8;
+
+    /* Surface & Border Colors */
+    --ef-bg: #FFFFFF;
+    --ef-bg-alt: #F8FAFC;
+    --ef-bg-subtle: #F1F5F9;
+    --ef-border: #E2E8F0;
+    --ef-border-dark: #CBD5E1;
+
+    /* Semantic Colors */
+    --ef-success: #059669;
+    --ef-success-light: #ECFDF5;
+    --ef-warning: #D97706;
+    --ef-warning-light: #FFFBEB;
+    --ef-danger: #DC2626;
+    --ef-danger-light: #FEF2F2;
+
+    /* Focus & Shadow */
+    --ef-focus: rgb(37 99 235 / 25%);
+    --ef-shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+    --ef-shadow: 0 4px 6px -1px rgb(15 23 42 / 0.07), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+    --ef-shadow-md: 0 10px 15px -3px rgb(15 23 42 / 0.07), 0 4px 6px -4px rgb(15 23 42 / 0.05);
+    --ef-shadow-lg: 0 20px 25px -5px rgb(15 23 42 / 0.08), 0 8px 10px -6px rgb(15 23 42 / 0.05);
+
+    /* Legacy compatibility */
+    --ef-line: #E2E8F0;
+    --ef-paper: #F8FAFC;
+    --ef-surface: #FFFFFF;
+    --ef-accent: #2563EB;
+    --ef-accent-strong: #1D4ED8;
+    --ef-danger: #DC2626;
+
     color-scheme: light;
   }
 
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 5rem;
-    background: var(--ef-paper);
+    background: var(--ef-bg);
   }
 
   body {
     min-width: 320px;
     font-family: var(--font-sans);
-    background-color: var(--ef-paper);
+    background-color: var(--ef-bg);
     color: var(--ef-ink);
-    line-height: 1.5;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  img {
-    display: block;
-  }
+  img { display: block; }
 
-  button,
-  a,
-  input,
-  select,
-  textarea {
+  button, a, input, select, textarea {
     font: inherit;
     -webkit-tap-highlight-color: transparent;
   }
 
-  button:not(:disabled),
-  a[href] {
+  button:not(:disabled), a[href] {
     touch-action: manipulation;
   }
 
   ::selection {
-    background: rgb(79 70 229 / 18%);
+    background: rgb(37 99 235 / 15%);
     color: var(--ef-ink);
+  }
+
+  /* Smooth focus styles */
+  :focus-visible {
+    outline: 2px solid var(--ef-blue);
+    outline-offset: 2px;
   }
 }
 
 @layer components {
+  /* ---- Layout ---- */
   .ef-container {
     width: min(100% - 2rem, 76rem);
     margin-inline: auto;
   }
 
+  /* ---- Grid texture for hero sections ---- */
+  .ef-grid-bg {
+    background-color: #ffffff;
+    background-image: 
+      linear-gradient(rgba(226, 232, 240, 0.6) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(226, 232, 240, 0.6) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* ---- Forms ---- */
   .ef-input {
     width: 100%;
-    min-height: 2.875rem;
-    border: 1px solid var(--ef-line);
-    border-radius: 0.75rem;
-    background: var(--ef-surface);
-    padding: 0.625rem 0.875rem;
+    min-height: 2.75rem;
+    border: 1.5px solid var(--ef-border);
+    border-radius: 0.625rem;
+    background: var(--ef-bg);
+    padding: 0.5625rem 0.875rem;
     color: var(--ef-ink);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
   }
 
   .ef-input::placeholder {
-    color: #94a3b8;
+    color: var(--ef-subtle);
+  }
+
+  .ef-input:hover:not(:disabled):not(:focus-visible) {
+    border-color: var(--ef-border-dark);
   }
 
   .ef-input:focus-visible {
-    border-color: var(--ef-accent);
+    border-color: var(--ef-blue);
     outline: none;
     box-shadow: 0 0 0 3px var(--ef-focus);
   }
 
   .ef-input[aria-invalid='true'] {
     border-color: var(--ef-danger);
+    box-shadow: 0 0 0 3px rgb(220 38 38 / 15%);
   }
 
   .ef-input:disabled {
     cursor: not-allowed;
-    background: #f1f5f9;
-    color: #64748b;
+    background: var(--ef-bg-subtle);
+    color: var(--ef-muted);
+    border-color: var(--ef-border);
   }
 
   .ef-label {
     display: block;
-    color: #334155;
-    font-size: 0.8125rem;
+    color: var(--ef-ink-80);
+    font-size: 0.875rem;
     font-weight: 600;
+    letter-spacing: -0.01em;
   }
 
   .ef-field-hint {
-    color: #64748b;
-    font-size: 0.75rem;
-    line-height: 1.2rem;
+    color: var(--ef-muted);
+    font-size: 0.8125rem;
+    line-height: 1.4;
   }
 
   .ef-field-error {
-    color: #9f1239;
-    font-size: 0.75rem;
-    line-height: 1.2rem;
+    color: var(--ef-danger);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    font-weight: 500;
   }
 
-  .ef-surface {
-    border: 1px solid var(--ef-line);
+  /* ---- Card surface ---- */
+  .ef-card {
+    border: 1px solid var(--ef-border);
     border-radius: 1rem;
-    background: var(--ef-surface);
-    box-shadow: 0 1px 2px rgb(16 27 50 / 4%);
+    background: var(--ef-bg);
+    box-shadow: var(--ef-shadow-sm);
+  }
+
+  .ef-card-hover {
+    transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  }
+
+  .ef-card-hover:hover {
+    border-color: var(--ef-border-dark);
+    box-shadow: var(--ef-shadow-md);
+    transform: translateY(-2px);
+  }
+
+  /* ---- Section divider ---- */
+  .ef-section {
+    border-top: 1px solid var(--ef-border);
+  }
+
+  /* ---- Pill / announcement badge ---- */
+  .ef-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--ef-blue-pale);
+    border-radius: 9999px;
+    background: var(--ef-blue-light);
+    padding: 0.25rem 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ef-blue-dark);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  /* ---- Legacy compatibility ---- */
+  .ef-surface {
+    border: 1px solid var(--ef-border);
+    border-radius: 1rem;
+    background: var(--ef-bg);
+    box-shadow: var(--ef-shadow-sm);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+  html { scroll-behavior: auto; }
 
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

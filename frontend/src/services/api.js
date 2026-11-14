@@ -6,7 +6,7 @@ import axios from 'axios';
  * Ready for future backend API integration with Aman.
  */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api',
   headers: {
     'Content-Type': 'application/json',
   },

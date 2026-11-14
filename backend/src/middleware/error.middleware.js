@@ -1,8 +1,5 @@
 import config from "../config/env.js";
 
-/**
- * Handle 404 for undefined routes
- */
 export const notFoundHandler = (req, res, next) => {
   res.status(404).json({
     success: false,
@@ -10,11 +7,7 @@ export const notFoundHandler = (req, res, next) => {
   });
 };
 
-/**
- * Centralized error handling middleware
- */
 export const errorHandler = (err, req, res, next) => {
-  // Handle JSON parse syntax errors from express.json()
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
     return res.status(400).json({
       success: false,

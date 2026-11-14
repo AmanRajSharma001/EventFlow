@@ -10,7 +10,6 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
   let server;
   let baseUrl;
 
-  // Start temporary test server
   await new Promise((resolve) => {
     server = app.listen(0, "127.0.0.1", () => {
       const port = server.address().port;
@@ -44,8 +43,8 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
     const parsed = registerSchema.safeParse(validPayload);
     assert.equal(parsed.success, true);
     assert.equal(parsed.data.name, "Aman Sharma");
-    assert.equal(parsed.data.email, "aman.sharma@college.edu"); // Normalized to lowercase
-    assert.equal(parsed.data.role, ROLES.STUDENT); // Defaults to STUDENT
+    assert.equal(parsed.data.email, "aman.sharma@college.edu");
+    assert.equal(parsed.data.role, ROLES.STUDENT);
   });
 
   await t.test("3. Registration Validation prevents role tampering and privilege escalation", async () => {
@@ -73,17 +72,14 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
   });
 
   await t.test("4. Registration Validation rejects invalid input fields", async () => {
-    // Short name (<2 chars)
     const badName = registerSchema.safeParse({ name: "A", email: "valid@college.edu", password: "password123" });
     assert.equal(badName.success, false);
     assert.ok(badName.error.flatten().fieldErrors.name);
 
-    // Invalid email format
     const badEmail = registerSchema.safeParse({ name: "Aman", email: "not-an-email", password: "password123" });
     assert.equal(badEmail.success, false);
     assert.ok(badEmail.error.flatten().fieldErrors.email);
 
-    // Password too short (<8 chars)
     const badPass = registerSchema.safeParse({ name: "Aman", email: "valid@college.edu", password: "short" });
     assert.equal(badPass.success, false);
     assert.ok(badPass.error.flatten().fieldErrors.password);
@@ -132,13 +128,11 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
   });
 
   await t.test("8. Authentication Middleware protects routes against missing or invalid JWT", async () => {
-    // Missing token
     const resNoAuth = await fetch(`${baseUrl}/api/auth/me`);
     assert.equal(resNoAuth.status, 401);
     const bodyNoAuth = await resNoAuth.json();
     assert.equal(bodyNoAuth.success, false);
 
-    // Invalid token
     const resBadAuth = await fetch(`${baseUrl}/api/auth/me`, {
       headers: { Authorization: "Bearer bad.token.here" }
     });
@@ -165,7 +159,7 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
     assert.equal(body.data.user.name, studentUser.name);
     assert.equal(body.data.user.email, studentUser.email);
     assert.equal(body.data.user.role, studentUser.role);
-    assert.equal(body.data.user.password, undefined); // Never expose password
+    assert.equal(body.data.user.password, undefined);
   });
 
   await t.test("10. Role-Based Authorization restricts access to unauthorized roles", async () => {
@@ -185,27 +179,23 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
     const requireAdmin = authorizeRoles(ROLES.ADMIN);
     const requireStaff = authorizeRoles(ROLES.ORGANIZER, ROLES.ADMIN);
 
-    // Student denied admin access
     const res1 = mockRes();
     let nextCalled1 = false;
     requireAdmin(studentUser, res1, () => { nextCalled1 = true; });
     assert.equal(res1.statusCode, 403);
     assert.equal(nextCalled1, false);
 
-    // Student denied organizer access
     const res2 = mockRes();
     let nextCalled2 = false;
     requireStaff(studentUser, res2, () => { nextCalled2 = true; });
     assert.equal(res2.statusCode, 403);
     assert.equal(nextCalled2, false);
 
-    // Organizer allowed staff access
     const res3 = mockRes();
     let nextCalled3 = false;
     requireStaff(organizerUser, res3, () => { nextCalled3 = true; });
     assert.equal(nextCalled3, true);
 
-    // Admin allowed admin access
     const res4 = mockRes();
     let nextCalled4 = false;
     requireAdmin(adminUser, res4, () => { nextCalled4 = true; });
@@ -213,7 +203,6 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
   });
 
   await t.test("11. Database Dependency Status documented when Prisma integration is pending", async () => {
-    // Valid registration HTTP request
     const regRes = await fetch(`${baseUrl}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -230,7 +219,6 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
     assert.equal(regBody.dependency?.teammate, "Sagar");
     assert.equal(regBody.data?.role, ROLES.STUDENT);
 
-    // Valid login HTTP request
     const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

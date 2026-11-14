@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node --test src/test/auth.test.js",
+    "test": "node --test src/test/auth.test.js src/test/events.test.js src/test/e2e.test.js",
     "db:check": "node scripts/db-check.js",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",

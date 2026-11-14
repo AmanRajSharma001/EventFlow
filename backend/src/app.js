@@ -2,13 +2,18 @@ import express from "express";
 import cors from "cors";
 import config from "./config/env.js";
 import authRoutes from "./routes/auth.routes.js";
+import eventRoutes from "./routes/event.routes.js";
+import registrationRoutes from "./routes/registration.routes.js";
+import attendanceRoutes from "./routes/attendance.routes.js";
+import announcementRoutes from "./routes/announcement.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import organizerRoutes from "./routes/organizer.routes.js";
 import { notFoundHandler, errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (such as mobile apps, curl, or Postman)
     if (!origin) return callback(null, true);
 
     const allowedOrigins = [
@@ -23,7 +28,7 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    return callback(null, true); // Permissive in development
+    return callback(null, true);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -45,6 +50,12 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/registrations", registrationRoutes);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/announcements", announcementRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/organizer", organizerRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

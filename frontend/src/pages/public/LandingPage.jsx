@@ -56,8 +56,8 @@ export default function LandingPage() {
       <section className="relative overflow-hidden border-b border-slate-200 bg-white">
         <div className="ef-container grid gap-10 py-12 sm:py-16 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-14 lg:py-20">
           <div className="max-w-2xl">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/70 px-3 py-1.5 text-xs font-semibold text-indigo-900">
-              <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/70 px-3 py-1.5 text-xs font-semibold text-blue-900">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
               Campus events, in one place
             </div>
             <h1 className="max-w-xl text-4xl font-semibold leading-[1.08] tracking-[-0.045em] text-slate-950 sm:text-5xl lg:text-[3.65rem]">
@@ -75,14 +75,14 @@ export default function LandingPage() {
               </Button>
             </div>
             <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-slate-100 pt-5 text-sm text-slate-600">
-              <span className="inline-flex items-center gap-2"><Compass aria-hidden="true" className="h-4 w-4 text-indigo-600" />Browse campus activities</span>
-              <span className="inline-flex items-center gap-2"><CalendarDays aria-hidden="true" className="h-4 w-4 text-indigo-600" />Compare dates and venues</span>
+              <span className="inline-flex items-center gap-2"><Compass aria-hidden="true" className="h-4 w-4 text-blue-600" />Browse campus activities</span>
+              <span className="inline-flex items-center gap-2"><CalendarDays aria-hidden="true" className="h-4 w-4 text-blue-600" />Compare dates and venues</span>
             </div>
           </div>
 
           <div className="relative mx-auto w-full max-w-2xl lg:max-w-none">
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xl shadow-slate-900/10">
-              <Link to={`/events/${featuredEvent.id}`} className="group relative block aspect-[16/11] overflow-hidden focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-indigo-500">
+              <Link to={`/events/${featuredEvent.id}`} className="group relative block aspect-[16/11] overflow-hidden focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-blue-500">
                 {featuredImageFailed ? (
                   <div aria-hidden="true" className="flex h-full w-full flex-col items-center justify-center gap-3 bg-slate-900 text-slate-300">
                     <ImageOff className="h-8 w-8" />
@@ -127,7 +127,7 @@ export default function LandingPage() {
       <section id="upcoming-events" className="ef-container scroll-mt-24 py-14 sm:py-20">
         <div className="flex flex-col gap-6 border-b border-slate-200 pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-700">Event discovery</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Event discovery</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
               {showPastEvents ? 'From the campus archive' : 'What’s coming up'}
             </h2>
@@ -182,7 +182,7 @@ export default function LandingPage() {
                   type="button"
                   aria-pressed={active}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors sm:text-sm ${active ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'}`}
+                  className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors sm:text-sm ${active ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'}`}
                 >
                   {category.name}
                 </button>
@@ -197,7 +197,7 @@ export default function LandingPage() {
             <button
               type="button"
               onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
-              className="shrink-0 rounded-md font-semibold text-indigo-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="shrink-0 rounded-md font-semibold text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               Clear filters
             </button>
@@ -238,7 +238,7 @@ export default function LandingPage() {
         <div className="ef-container">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-700">Clubs, councils & societies</p>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Clubs, councils & societies</p>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Meet the groups behind campus events.</h2>
               <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
                 Start with the student groups and campus organizations represented in the current sample listings.
@@ -257,7 +257,7 @@ export default function LandingPage() {
               return (
                 <article key={group.name} className="flex h-full flex-col rounded-2xl border border-slate-200 bg-slate-50/60 p-5 transition-colors hover:border-slate-300 hover:bg-white motion-reduce:transition-none sm:p-6">
                   <div className="flex items-start justify-between gap-3">
-                    <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-50 text-indigo-700">
+                    <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-700">
                       <UsersRound className="h-5 w-5" />
                     </span>
                     <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">
@@ -270,7 +270,7 @@ export default function LandingPage() {
                   </p>
                   <Link
                     to={`/events?q=${encodeURIComponent(group.name)}`}
-                    className="mt-auto inline-flex min-h-11 items-center gap-2 pt-5 text-sm font-semibold text-indigo-700 outline-none transition-colors hover:text-indigo-900 focus-visible:ring-2 focus-visible:ring-indigo-500 motion-reduce:transition-none"
+                    className="mt-auto inline-flex min-h-11 items-center gap-2 pt-5 text-sm font-semibold text-blue-700 outline-none transition-colors hover:text-blue-900 focus-visible:ring-2 focus-visible:ring-blue-500 motion-reduce:transition-none"
                   >
                     View group events <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
                   </Link>
@@ -284,7 +284,7 @@ export default function LandingPage() {
       <section id="students" className="scroll-mt-24 border-y border-slate-200 bg-white py-14 sm:py-20">
         <div className="ef-container">
           <div className="max-w-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-700">A clearer event journey</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">A clearer event journey</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">From discovery to participation history.</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
               EventFlow is being shaped around the steps students and organizers take before, during, and after campus events.
@@ -309,7 +309,7 @@ export default function LandingPage() {
       <section id="organizers" className="ef-container scroll-mt-24 py-14 sm:py-20">
         <div className="grid gap-5 lg:grid-cols-2">
           <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-indigo-50 text-indigo-700"><UsersRound aria-hidden="true" className="h-5 w-5" /></div>
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-blue-50 text-blue-700"><UsersRound aria-hidden="true" className="h-5 w-5" /></div>
             <p className="mt-6 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">For students</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Spend less time searching for event details.</h2>
             <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">Explore campus listings and quickly find the dates, venues, and groups hosting each activity.</p>
