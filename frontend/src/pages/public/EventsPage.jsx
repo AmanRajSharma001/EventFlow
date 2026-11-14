@@ -50,13 +50,8 @@ export default function EventsPage() {
         const result = await eventsService.getEvents();
         if (isCancelled) return;
         const liveList = result?.events || [];
-        if (liveList.length > 0) {
-          setEventsList(liveList);
-          setIsUsingFallback(false);
-        } else {
-          setEventsList(getFallbackCatalogEvents());
-          setIsUsingFallback(true);
-        }
+        setEventsList(liveList);
+        setIsUsingFallback(false);
       } catch (err) {
         if (isCancelled) return;
         if (isDatabasePendingError(err)) {

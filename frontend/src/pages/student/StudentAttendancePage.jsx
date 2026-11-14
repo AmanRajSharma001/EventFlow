@@ -26,26 +26,48 @@ export default function StudentAttendancePage() {
     registeredEventIds = [],
     cancelledEventIds = [],
     attendanceRecords = [],
+    attendanceSource,
+    isLoadingAttendance,
+    attendanceError,
+    refreshAttendance,
   } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
 
   // Calculate statistics
   const stats = useMemo(() => {
-    return calculateStudentStats(registeredEventIds, cancelledEventIds, attendanceRecords);
-  }, [registeredEventIds, cancelledEventIds, attendanceRecords]);
+    const demoStats = calculateStudentStats(
+      registeredEventIds,
+      cancelledEventIds,
+      attendanceRecords
+    );
 
-  // Merge attendance records with event metadata from mockCollegeEvents
+    if (attendanceSource !== 'live') return demoStats;
+
+    return {
+      ...demoStats,
+      attendedCount: attendanceRecords.length,
+      attendanceRate: null,
+      totalPoints: null,
+    };
+  }, [
+    attendanceRecords,
+    attendanceSource,
+    cancelledEventIds,
+    registeredEventIds,
+  ]);
+
   const enrichedRecords = useMemo(() => {
     return attendanceRecords.map((rec) => {
-      const event = mockCollegeEvents.find((e) => e.id === rec.eventId);
+      const event =
+        rec.event || mockCollegeEvents.find((item) => item.id === rec.eventId);
       return {
         ...rec,
-        eventTitle: event?.title || 'Campus Event',
+        eventTitle: rec.eventTitle || event?.title || 'Campus Event',
         category: event?.category || 'General',
-        date: event?.date || 'Past Event',
+        date: rec.date || event?.date || event?.startDate || 'Past Event',
         venue: event?.venue || 'Campus Auditorium',
-        organizer: event?.organizer || 'College Council',
+        organizer: rec.organizer || event?.organizer || 'College Council',
       };
     });
   }, [attendanceRecords]);
@@ -58,7 +80,7 @@ export default function StudentAttendancePage() {
       (r) =>
         r.eventTitle.toLowerCase().includes(q) ||
         r.venue.toLowerCase().includes(q) ||
-        r.verificationMethod.toLowerCase().includes(q)
+        (r.verificationMethod || '').toLowerCase().includes(q)
     );
   }, [enrichedRecords, searchQuery]);
 
@@ -86,13 +108,26 @@ export default function StudentAttendancePage() {
         </Button>
       </div>
 
-      {/* Demo Notice Banner */}
-      <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-xs text-blue-900 leading-relaxed">
-        <Info className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
-        <div>
-          <strong className="font-semibold text-blue-950">Campus Demo Records Notice:</strong> Attendance checkpoints and check-in timestamps are verified sample records stored in your browser session for this prototype review.
+      {attendanceSource === 'demo' && (
+        <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-xs leading-relaxed text-blue-900">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+          <div>
+            <strong className="font-semibold text-blue-950">Campus Demo Records Notice:</strong>{' '}
+            Attendance records are sample data stored in this browser because database integration is pending.
+          </div>
         </div>
-      </div>
+      )}
+
+      {attendanceError && (
+        <div className="rounded-2xl border border-red-100 bg-red-50/60 p-4 text-sm text-red-800">
+          <p>{attendanceError}</p>
+          <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={refreshAttendance}>
+            Retry attendance
+          </Button>
+        </div>
+      )}
+
+      {isLoadingAttendance && <p className="text-sm text-slate-500">Loading attendance records...</p>}
 
       {/* Metrics Row */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -106,7 +141,7 @@ export default function StudentAttendancePage() {
         />
         <StatCard
           title="Attendance Rate"
-          value={`${stats.attendanceRate}%`}
+          value={stats.attendanceRate == null ? '—' : `${stats.attendanceRate}%`}
           subtitle="Overall completion record"
           icon={GraduationCap}
           badgeText={stats.attendanceRate >= 85 ? 'High' : 'Normal'}
@@ -114,7 +149,7 @@ export default function StudentAttendancePage() {
         />
         <StatCard
           title="Activity Points"
-          value={`${stats.totalPoints} pts`}
+          value={stats.totalPoints == null ? '—' : `${stats.totalPoints} pts`}
           subtitle="Academic co-curricular score"
           icon={Sparkles}
           badgeText="+15 recent"
@@ -224,7 +259,7 @@ export default function StudentAttendancePage() {
 
                     {/* Points */}
                     <td className="px-6 py-4 whitespace-nowrap text-right font-mono font-bold text-blue-600">
-                      +{record.pointsEarned} pts
+                      {record.pointsEarned == null ? '—' : `+${record.pointsEarned} pts`}
                     </td>
                   </tr>
                 ))}

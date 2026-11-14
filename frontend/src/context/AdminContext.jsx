@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
   INITIAL_ADMIN_ANNOUNCEMENTS,
@@ -10,6 +10,8 @@ import {
   INITIAL_ORGANIZER_EVENTS,
 } from '../data/mockOrganizerData';
 import { AdminContext } from './adminContextDef';
+import adminService from '../services/admin.service';
+import { isDatabasePendingError } from '../services/dbStatus';
 
 const ADMIN_USERS_KEY = 'eventflow_admin_users';
 const ADMIN_EVENTS_KEY = 'eventflow_organizer_events'; // Sync with organizer events!
@@ -49,6 +51,10 @@ export function AdminProvider({ children }) {
     readStorage(ADMIN_ANNOUNCEMENTS_KEY, INITIAL_ADMIN_ANNOUNCEMENTS)
   );
   const [auditLog, setAuditLog] = useState(INITIAL_ADMIN_AUDIT_LOG);
+  const [dashboard, setDashboard] = useState(null);
+  const [dashboardSource, setDashboardSource] = useState('demo');
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
+  const [dashboardError, setDashboardError] = useState(null);
 
   useEffect(() => {
     writeStorage(ADMIN_USERS_KEY, users);
@@ -65,6 +71,35 @@ export function AdminProvider({ children }) {
   useEffect(() => {
     writeStorage(ADMIN_ANNOUNCEMENTS_KEY, announcements);
   }, [announcements]);
+
+  const refreshDashboard = useCallback(async () => {
+    if (!localStorage.getItem('eventflow_token')) return null;
+
+    setIsLoadingDashboard(true);
+    setDashboardError(null);
+    try {
+      const liveDashboard = await adminService.getAdminDashboard();
+      setDashboard(liveDashboard);
+      setDashboardSource('live');
+      return liveDashboard;
+    } catch (error) {
+      if (isDatabasePendingError(error)) {
+        setDashboard(null);
+        setDashboardSource('demo');
+        return null;
+      }
+
+      setDashboard(null);
+      setDashboardSource('error');
+      setDashboardError(
+        error?.response?.data?.message ||
+          'Unable to load admin dashboard analytics.'
+      );
+      return null;
+    } finally {
+      setIsLoadingDashboard(false);
+    }
+  }, []);
 
   // Update a user's status (Active, Suspended, Pending)
   const updateUserStatus = (userId, newStatus) => {
@@ -190,6 +225,11 @@ export function AdminProvider({ children }) {
         updateAnnouncement,
         deleteAnnouncement,
         resetToDemo,
+        dashboard,
+        dashboardSource,
+        isLoadingDashboard,
+        dashboardError,
+        refreshDashboard,
       }}
     >
       {children}
