@@ -16,7 +16,6 @@ export const getRegistrationQr = async (req, res, next) => {
               title: true,
               startDate: true,
               location: true,
-              venue: true,
               organizerId: true
             }
           },
@@ -417,8 +416,7 @@ export const getMyAttendance = async (req, res, next) => {
               category: true,
               startDate: true,
               endDate: true,
-              location: true,
-              venue: true
+              location: true
             }
           },
           attendance: true
