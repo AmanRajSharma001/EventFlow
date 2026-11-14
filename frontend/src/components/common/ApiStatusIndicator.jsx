@@ -98,6 +98,14 @@ export default function ApiStatusIndicator({ className = '' }) {
           borderColor: 'border-slate-200',
           label: 'Backend Offline · Local Mode',
         };
+      case 'error':
+        return {
+          dotColor: 'bg-rose-500',
+          textColor: 'text-rose-700',
+          bgColor: 'bg-rose-50',
+          borderColor: 'border-rose-200',
+          label: 'Database Disconnected',
+        };
       case 'unchecked':
       default:
         return {

@@ -1,7 +1,7 @@
 {
   "name": "eventflow",
   "productName": "EventFlow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "EventFlow — College Event Management & Participation System",
   "main": "electron/main.cjs",
   "author": "EventFlow Team (Aman, Azmol, Sagar)",
@@ -56,7 +56,7 @@
     },
     "dmg": {
       "title": "EventFlow",
-      "artifactName": "EventFlow-macOS.dmg",
+      "artifactName": "EventFlow-macOS-1.0.1.dmg",
       "contents": [
         {
           "x": 130,

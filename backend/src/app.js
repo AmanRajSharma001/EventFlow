@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import config from "./config/env.js";
+import { checkDatabaseConnection } from "./config/prisma.js";
 import authRoutes from "./routes/auth.routes.js";
 import eventRoutes from "./routes/event.routes.js";
 import registrationRoutes from "./routes/registration.routes.js";
@@ -45,6 +46,27 @@ app.get("/api/health", (req, res) => {
     message: "EventFlow API is running",
     environment: config.nodeEnv,
     uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get("/api/ready", async (req, res) => {
+  const dbStatus = await checkDatabaseConnection();
+  if (dbStatus.connected) {
+    return res.status(200).json({
+      success: true,
+      ready: true,
+      database: "connected",
+      environment: config.nodeEnv,
+      timestamp: new Date().toISOString()
+    });
+  }
+  return res.status(503).json({
+    success: false,
+    ready: false,
+    database: "disconnected",
+    error: dbStatus.error,
+    environment: config.nodeEnv,
     timestamp: new Date().toISOString()
   });
 });

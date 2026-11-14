@@ -322,7 +322,7 @@ npm run dev
 
 ---
 
-## 14. Building the macOS DMG Installer
+## 14. Building and Running the macOS DMG Installer
 
 To compile the React production bundle and package the standalone macOS ARM64 `.dmg` installer:
 
@@ -331,12 +331,34 @@ npm run dist:mac
 ```
 
 The installer will be generated in the `release/` folder:
-- **Installer file**: `release/EventFlow-macOS.dmg`
+- **Installer file**: `release/EventFlow-macOS-1.0.1.dmg`
 - **Architecture**: Apple Silicon ARM64
+
+### Database Configuration for Packaged Desktop Mode
+
+To ensure the packaged desktop application securely connects to your PostgreSQL database without hardcoding credentials into the distributed DMG:
+
+1. **Option A (Recommended — Application Support)**: Create `~/Library/Application Support/EventFlow/.env` with your PostgreSQL connection string:
+   ```bash
+   mkdir -p "$HOME/Library/Application Support/EventFlow"
+   echo 'DATABASE_URL="postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/eventflow"' > "$HOME/Library/Application Support/EventFlow/.env"
+   chmod 600 "$HOME/Library/Application Support/EventFlow/.env"
+   ```
+
+2. **Option B (Home directory)**: Place `.eventflow.env` in your user home directory:
+   ```bash
+   echo 'DATABASE_URL="postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/eventflow"' > "$HOME/.eventflow.env"
+   ```
+
+3. **Option C (Environment variable)**: Export `DATABASE_URL` before launching from terminal:
+   ```bash
+   export DATABASE_URL="postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/eventflow"
+   open /Applications/EventFlow.app
+   ```
 
 ### Installing the Packaged App
 
-1. Double-click `release/EventFlow-macOS.dmg` to mount the disk image.
+1. Double-click `release/EventFlow-macOS-1.0.1.dmg` to mount the disk image.
 2. Drag **EventFlow** into the **Applications** folder.
 3. Open EventFlow from Launchpad or Applications.
 

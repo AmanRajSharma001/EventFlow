@@ -59,20 +59,7 @@ export const createAnnouncement = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Announcement posting is awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Announcement model schema"
-      },
-      data: {
-        eventId,
-        creatorId,
-        title,
-        message,
-        priority: priority || "NORMAL",
-        isPinned: Boolean(isPinned)
-      }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);
@@ -128,13 +115,7 @@ export const getEventAnnouncements = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Event announcements query is awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Announcement model schema"
-      },
-      data: { eventId }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);
@@ -183,13 +164,7 @@ export const deleteAnnouncement = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Announcement deletion requested, but awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Announcement model schema"
-      },
-      data: { id }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);

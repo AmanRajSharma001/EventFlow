@@ -69,19 +69,9 @@ export const getRegistrationQr = async (req, res, next) => {
       });
     }
 
-    const fallbackQr = generateQrToken(id, "evt-preview");
     return res.status(503).json({
       success: false,
-      message: "Registration QR query is awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Registration/Attendance model schemas"
-      },
-      data: {
-        registrationId: id,
-        generatedQrToken: fallbackQr
-      }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);
@@ -192,17 +182,7 @@ export const checkIn = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Attendance check-in is awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Attendance model schema"
-      },
-      data: {
-        qrToken,
-        eventId: eventId || null,
-        checkedInBy: req.user.id
-      }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);
@@ -298,18 +278,7 @@ export const manualCheckIn = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Manual check-in is awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Attendance model schema"
-      },
-      data: {
-        registrationId: registrationId || null,
-        eventId: eventId || null,
-        studentId: studentId || null,
-        notes: notes || null
-      }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);
@@ -385,13 +354,7 @@ export const getEventAttendance = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Event attendance query is awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Attendance model schema"
-      },
-      data: { eventId }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);
@@ -446,13 +409,7 @@ export const getMyAttendance = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Student attendance records query is awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Attendance model schema"
-      },
-      data: { studentId }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);

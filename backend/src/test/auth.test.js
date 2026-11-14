@@ -33,6 +33,16 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
     assert.equal(typeof body.uptime, "number");
   });
 
+  await t.test("1b. Readiness Endpoint returns 200 and database status", async () => {
+    const res = await fetch(`${baseUrl}/api/ready`);
+    assert.equal(res.status, 200);
+
+    const body = await res.json();
+    assert.equal(body.success, true);
+    assert.equal(body.ready, true);
+    assert.equal(body.database, "connected");
+  });
+
   await t.test("2. Registration Validation allows valid student payload", async () => {
     const validPayload = {
       name: "Aman Sharma",

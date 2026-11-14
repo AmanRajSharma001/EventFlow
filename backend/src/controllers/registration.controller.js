@@ -134,20 +134,7 @@ export const registerForEvent = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Event registration validated, but awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Registration model schema"
-      },
-      data: {
-        eventId,
-        studentId,
-        notes: notes || null,
-        department: department || null,
-        semester: semester || null,
-        status: REGISTRATION_STATUS.CONFIRMED
-      }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     if (error?.code === "P2034") {
@@ -198,13 +185,7 @@ export const getMyRegistrations = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Student registrations query is awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Registration model schema"
-      },
-      data: { studentId }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);
@@ -269,13 +250,7 @@ export const getEventRegistrations = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Event registrations query is awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Registration model schema"
-      },
-      data: { eventId }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);
@@ -344,17 +319,7 @@ export const cancelRegistration = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Registration cancellation requested, but awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma Registration model schema"
-      },
-      data: {
-        registrationId,
-        studentId: req.user.id,
-        reason: reason || null
-      }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);

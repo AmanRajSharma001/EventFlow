@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
+const fs = require('fs');
 
 function checkUrlReady(url, maxAttempts = 30, delayMs = 500) {
   return new Promise((resolve) => {
@@ -24,6 +25,17 @@ function checkUrlReady(url, maxAttempts = 30, delayMs = 500) {
 async function run() {
   const rootDir = path.resolve(__dirname, '..');
   const frontendDir = path.join(rootDir, 'frontend');
+  const backendEnvPath = path.join(rootDir, 'backend/.env');
+
+  if (!process.env.DATABASE_URL && fs.existsSync(backendEnvPath)) {
+    try {
+      const envContent = fs.readFileSync(backendEnvPath, 'utf8');
+      const match = envContent.match(/^DATABASE_URL\s*=\s*["']?([^"'\r\n]+)["']?/m);
+      if (match && match[1]) {
+        process.env.DATABASE_URL = match[1].trim();
+      }
+    } catch {}
+  }
 
   const vite = spawn('npm', ['run', 'dev'], {
     cwd: frontendDir,

@@ -1,20 +1,92 @@
 const { app, BrowserWindow, shell, ipcMain, Menu } = require('electron');
 const path = require('path');
 const http = require('http');
+const fs = require('fs');
+const os = require('os');
 const { fork } = require('child_process');
 
 let mainWindow = null;
 let backendProcess = null;
 
-function checkBackendRunning() {
+function sanitizeUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return '[not configured]';
+  try {
+    const u = new URL(rawUrl);
+    if (u.password) u.password = '******';
+    return u.toString();
+  } catch {
+    return '[configured]';
+  }
+}
+
+function resolveDatabaseConfig() {
+  if (process.env.DATABASE_URL) {
+    return {
+      source: 'process.env.DATABASE_URL',
+      url: process.env.DATABASE_URL
+    };
+  }
+
+  const userDataDir = app.getPath('userData');
+  const candidatePaths = [
+    path.join(userDataDir, '.env'),
+    path.join(os.homedir(), '.eventflow.env'),
+    path.join(process.cwd(), '.env'),
+    path.join(__dirname, '../backend/.env')
+  ];
+
+  for (const envPath of candidatePaths) {
+    if (fs.existsSync(envPath)) {
+      try {
+        const content = fs.readFileSync(envPath, 'utf8');
+        const match = content.match(/^DATABASE_URL\s*=\s*["']?([^"'\r\n]+)["']?/m);
+        if (match && match[1]) {
+          return {
+            source: envPath,
+            url: match[1].trim()
+          };
+        }
+      } catch (err) {
+        console.error(`[Electron] Error reading candidate env file ${envPath}:`, err.message);
+      }
+    }
+  }
+
+  if (app.isPackaged) {
+    try {
+      if (!fs.existsSync(userDataDir)) {
+        fs.mkdirSync(userDataDir, { recursive: true });
+      }
+      const examplePath = path.join(userDataDir, '.env.example');
+      if (!fs.existsSync(examplePath)) {
+        const template = '# EventFlow Database Configuration\n# Specify your PostgreSQL connection string below and rename this file to .env\nDATABASE_URL="postgresql://user:password@localhost:5432/eventflow"\n';
+        fs.writeFileSync(examplePath, template, 'utf8');
+      }
+    } catch {}
+  }
+
+  return null;
+}
+
+function checkEndpoint(pathname) {
   return new Promise((resolve) => {
-    const req = http.get('http://localhost:5001/api/health', (res) => {
-      resolve(res.statusCode === 200);
+    const req = http.get(`http://localhost:5001${pathname}`, (res) => {
+      let body = '';
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+      res.on('end', () => {
+        resolve({
+          ok: res.statusCode === 200,
+          status: res.statusCode,
+          body
+        });
+      });
     });
-    req.on('error', () => resolve(false));
-    req.setTimeout(1000, () => {
+    req.on('error', () => resolve({ ok: false, status: 0, body: '' }));
+    req.setTimeout(1500, () => {
       req.destroy();
-      resolve(false);
+      resolve({ ok: false, status: 0, body: '' });
     });
   });
 }
@@ -37,15 +109,32 @@ function getBackendPaths() {
 function startBackend() {
   try {
     const { script, cwd } = getBackendPaths();
+    const dbConfig = resolveDatabaseConfig();
+
+    if (!fs.existsSync(script)) {
+      console.error(`[Electron] Backend server script not found at: ${script}`);
+      return false;
+    }
+
+    const childEnv = {
+      ...process.env,
+      ELECTRON_RUN_AS_NODE: '1',
+      PORT: '5001',
+      NODE_ENV: process.env.NODE_ENV || (app.isPackaged ? 'production' : 'development')
+    };
+
+    if (dbConfig && dbConfig.url) {
+      childEnv.DATABASE_URL = dbConfig.url;
+      console.log(`[Electron] Database configured from: ${dbConfig.source} (${sanitizeUrl(dbConfig.url)})`);
+    } else {
+      console.warn('[Electron] No DATABASE_URL found. Checked environment, Application Support (.env), ~/.eventflow.env, and backend/.env');
+    }
+
+    console.log(`[Electron] Spawning backend process at: ${script} (cwd: ${cwd})`);
 
     backendProcess = fork(script, [], {
       cwd,
-      env: {
-        ...process.env,
-        ELECTRON_RUN_AS_NODE: '1',
-        PORT: '5001',
-        NODE_ENV: process.env.NODE_ENV || 'production'
-      },
+      env: childEnv,
       silent: true,
       execPath: process.execPath
     });
@@ -64,33 +153,57 @@ function startBackend() {
 
     backendProcess.on('exit', (code, signal) => {
       console.log(`[Backend Process Exited] code=${code} signal=${signal}`);
+      if (code !== 0 && code !== null) {
+        console.error(`[Backend Process Warning] Backend exited with non-zero code ${code}`);
+      }
       backendProcess = null;
     });
+
+    return true;
   } catch (err) {
     console.error('[Failed to start backend process]:', err);
+    return false;
   }
 }
 
 function stopBackend() {
   if (backendProcess && !backendProcess.killed) {
+    console.log('[Electron] Shutting down backend process gracefully...');
     try {
       backendProcess.kill('SIGTERM');
-    } catch {
+    } catch {}
+    const proc = backendProcess;
+    setTimeout(() => {
       try {
-        backendProcess.kill('SIGKILL');
+        if (!proc.killed) {
+          proc.kill('SIGKILL');
+        }
       } catch {}
-    }
+    }, 1500);
     backendProcess = null;
   }
 }
 
-async function waitForBackend(maxAttempts = 15, delayMs = 300) {
+async function waitForBackend(maxAttempts = 25, delayMs = 300) {
+  let isServerUp = false;
+  let isDbReady = false;
+
   for (let i = 0; i < maxAttempts; i++) {
-    const isUp = await checkBackendRunning();
-    if (isUp) return true;
+    const health = await checkEndpoint('/api/health');
+    if (health.ok) {
+      isServerUp = true;
+      const ready = await checkEndpoint('/api/ready');
+      if (ready.ok) {
+        isDbReady = true;
+        console.log(`[Electron] Backend and database ready after attempt ${i + 1}`);
+        return { serverOnline: true, dbReady: true };
+      }
+    }
     await new Promise((r) => setTimeout(r, delayMs));
   }
-  return false;
+
+  console.log(`[Electron] Backend wait completed: serverOnline=${isServerUp}, dbReady=${isDbReady}`);
+  return { serverOnline: isServerUp, dbReady: isDbReady };
 }
 
 function setupApplicationMenu() {
@@ -206,7 +319,13 @@ function createWindow() {
 }
 
 ipcMain.handle('check-backend-health', async () => {
-  return await checkBackendRunning();
+  const result = await checkEndpoint('/api/health');
+  return result.ok;
+});
+
+ipcMain.handle('check-backend-readiness', async () => {
+  const result = await checkEndpoint('/api/ready');
+  return result.ok;
 });
 
 app.on('before-quit', stopBackend);
@@ -227,11 +346,13 @@ app.on('activate', () => {
 app.whenReady().then(async () => {
   setupApplicationMenu();
 
-  const isAlreadyRunning = await checkBackendRunning();
-  if (!isAlreadyRunning) {
+  const healthCheck = await checkEndpoint('/api/health');
+  if (healthCheck.ok) {
+    console.log('[Electron] Port 5001 already has active backend service. Reusing existing instance.');
+  } else {
     startBackend();
-    await waitForBackend();
   }
 
+  await waitForBackend();
   createWindow();
 });

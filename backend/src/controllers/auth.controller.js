@@ -56,17 +56,7 @@ export const register = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Registration validated and password hashed, but awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma User model schema"
-      },
-      data: {
-        name,
-        email,
-        role: assignedRole
-      }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);
@@ -121,12 +111,7 @@ export const login = async (req, res, next) => {
 
     return res.status(503).json({
       success: false,
-      message: "Login credentials validated, but awaiting database integration with Sagar's Prisma setup.",
-      dependency: {
-        status: "pending_database_integration",
-        teammate: "Sagar",
-        required: "PostgreSQL database connection and Prisma User model schema"
-      }
+      message: "Database service unavailable: PostgreSQL connection not established."
     });
   } catch (error) {
     next(error);

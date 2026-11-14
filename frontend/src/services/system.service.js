@@ -53,6 +53,20 @@ export const systemService = {
     }
 
     try {
+      const readyRes = await api.get('/ready', { timeout: 3000 });
+      if (readyRes.status === 200 && readyRes.data?.ready) {
+        return {
+          status: 'ready',
+          serverOnline: true,
+          dbReady: true,
+          dependencyInfo: null,
+        };
+      }
+    } catch {
+      // Continue to fallback probe
+    }
+
+    try {
       // Safe read-only probe to check database connectivity
       const response = await api.get('/events', { params: { limit: 1 }, timeout: 3000 });
       if (response.status === 200) {
