@@ -34,7 +34,7 @@ async function createEvent({ status = "PUBLISHED", capacity = 5, deadlineOffsetM
     data: {
       title,
       description: "test event",
-      venue: "Test Hall",
+      location: "Test Hall",
       startDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
       endDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
       registrationDeadline: deadline,
@@ -52,7 +52,7 @@ async function createRegistration(studentId, eventId) {
     data: {
       studentId,
       eventId,
-      status: "REGISTERED",
+      status: "CONFIRMED",
     },
   });
   createdIds.registrations.push(reg.id);

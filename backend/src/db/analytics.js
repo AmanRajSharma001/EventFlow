@@ -5,13 +5,13 @@
 import prisma from "../config/prisma.js";
 
 // Returns high-level platform totals across all core models:
-// total users, total events, active registrations (REGISTERED status only), and total attendances.
+// total users, total events, active registrations (CONFIRMED status only), and total attendances.
 export async function getOverallStats() {
   const [users, events, registrations, attendances] = await Promise.all([
     prisma.user.count(),
     prisma.event.count(),
     prisma.registration.count({
-      where: { status: "REGISTERED" },
+      where: { status: "CONFIRMED" },
     }),
     prisma.attendance.count(),
   ]);
@@ -56,7 +56,7 @@ export async function getEventStats(eventId) {
   const registered = await prisma.registration.count({
     where: {
       eventId,
-      status: "REGISTERED",
+      status: "CONFIRMED",
     },
   });
 
@@ -87,7 +87,7 @@ export async function getTopEvents(limit = 10) {
       _count: {
         select: {
           registrations: {
-            where: { status: "REGISTERED" },
+            where: { status: "CONFIRMED" },
           },
         },
       },
@@ -107,4 +107,3 @@ export async function getTopEvents(limit = 10) {
   }
   return sorted;
 }
-

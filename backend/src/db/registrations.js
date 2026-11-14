@@ -39,7 +39,7 @@ export async function registerStudent(studentId, eventId) {
       const registeredCount = await tx.registration.count({
         where: {
           eventId,
-          status: "REGISTERED",
+          status: "CONFIRMED",
         },
       });
       if (registeredCount >= event.capacity) {
@@ -52,14 +52,18 @@ export async function registerStudent(studentId, eventId) {
       });
 
       if (existing) {
-        if (existing.status === "REGISTERED") {
+        if (existing.status === "CONFIRMED") {
           throw new Error("Already registered");
         }
         if (existing.status === "CANCELLED") {
-          // Reactivate a cancelled registration.
+          // Reactivate a cancelled registration and clear cancellation details.
           return await tx.registration.update({
             where: { id: existing.id },
-            data: { status: "REGISTERED" },
+            data: {
+              status: "CONFIRMED",
+              cancelledAt: null,
+              cancellationReason: null,
+            },
           });
         }
       }
@@ -69,7 +73,7 @@ export async function registerStudent(studentId, eventId) {
         data: {
           studentId,
           eventId,
-          status: "REGISTERED",
+          status: "CONFIRMED",
         },
       });
     }, { isolationLevel: "Serializable" });
@@ -82,4 +86,3 @@ export async function registerStudent(studentId, eventId) {
     throw e;
   }
 }
-

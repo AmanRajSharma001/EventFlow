@@ -1,9 +1,9 @@
 // Database helper functions for managing event registrations and attendance check-ins.
-// Handles student cancellations and QR token verification at venue entrance.
+// Handles student cancellations and QR token verification at event entrance.
 
 import prisma from "../config/prisma.js";
 
-// Cancels a student's registration for an event.
+// Cancels a student's registration for an event and records cancellation timestamp.
 // Sets the registration status to CANCELLED instead of deleting the record to preserve audit history.
 // If the student has already checked into the event, cancellation is blocked.
 export async function cancelRegistration(registrationId) {
@@ -21,15 +21,18 @@ export async function cancelRegistration(registrationId) {
     throw new Error("Already checked in, cannot cancel");
   }
 
-  // Update status to CANCELLED
+  // Update status to CANCELLED and track when cancellation occurred
   return await prisma.registration.update({
     where: { id: registrationId },
-    data: { status: "CANCELLED" },
+    data: {
+      status: "CANCELLED",
+      cancelledAt: new Date(),
+    },
   });
 }
 
-// Checks in a student at the venue by scanning their unique QR token.
-// Confirms that the QR code is valid, active (not cancelled), and not already checked in.
+// Checks in a student at the event location by scanning their unique QR token.
+// Confirms that the QR code is valid, active (CONFIRMED), and not already checked in.
 export async function checkInByQrToken(qrToken) {
   // Find registration by unique qrToken, including event and attendance details
   const registration = await prisma.registration.findUnique({
@@ -44,7 +47,7 @@ export async function checkInByQrToken(qrToken) {
     throw new Error("Invalid QR code");
   }
 
-  if (registration.status !== "REGISTERED") {
+  if (registration.status !== "CONFIRMED") {
     throw new Error("Registration was cancelled");
   }
 
@@ -68,4 +71,3 @@ export async function checkInByQrToken(qrToken) {
     throw error;
   }
 }
-

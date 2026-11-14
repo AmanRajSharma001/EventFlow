@@ -35,7 +35,7 @@ async function createEvent({ status = "PUBLISHED", capacity = 5, deadlineOffsetM
     data: {
       title,
       description: "test event",
-      venue: "Test Hall",
+      location: "Test Hall",
       startDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
       endDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
       registrationDeadline: deadline,
@@ -95,7 +95,7 @@ test("normal registration works", async () => {
   const reg = await registerStudent(student.id, event.id);
   createdIds.registrations.push(reg.id);
 
-  assert.equal(reg.status, "REGISTERED");
+  assert.equal(reg.status, "CONFIRMED");
   assert.equal(reg.studentId, student.id);
   assert.equal(reg.eventId, event.id);
 });
@@ -174,7 +174,9 @@ test("cancelled student can register again", async () => {
   const reg2 = await registerStudent(student.id, event.id);
   // The same registration record is updated, not a new one.
   assert.equal(reg2.id, reg.id);
-  assert.equal(reg2.status, "REGISTERED");
+  assert.equal(reg2.status, "CONFIRMED");
+  assert.equal(reg2.cancelledAt, null);
+  assert.equal(reg2.cancellationReason, null);
 });
 
 // ==== Test 6: concurrency – only one succeeds when capacity is 1 ====

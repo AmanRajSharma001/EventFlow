@@ -5,7 +5,7 @@
 import prisma from "../config/prisma.js";
 
 // Fetches a single event by its ID along with public organizer details (id and name only).
-// Computes registeredCount for active registrations, ensuring sensitive fields like email and password are never leaked.
+// Computes registeredCount for active CONFIRMED registrations, ensuring sensitive fields like email and password are never leaked.
 // Returns null if no event matches the given ID.
 export async function getEventById(eventId) {
   const event = await prisma.event.findUnique({
@@ -20,7 +20,7 @@ export async function getEventById(eventId) {
       _count: {
         select: {
           registrations: {
-            where: { status: "REGISTERED" },
+            where: { status: "CONFIRMED" },
           },
         },
       },
@@ -66,16 +66,16 @@ export async function createEvent(organizerId, data = {}) {
     throw new Error("Capacity must be a positive whole number");
   }
 
-  // Validate chronological ordering of event dates
+  // Validate chronological ordering of event dates when optional dates are provided
   const startDate = new Date(data.startDate);
-  const endDate = new Date(data.endDate);
-  const registrationDeadline = new Date(data.registrationDeadline);
+  const endDate = data.endDate ? new Date(data.endDate) : null;
+  const registrationDeadline = data.registrationDeadline ? new Date(data.registrationDeadline) : null;
 
-  if (endDate <= startDate) {
+  if (endDate && endDate <= startDate) {
     throw new Error("End date must be after start date");
   }
 
-  if (registrationDeadline >= startDate) {
+  if (registrationDeadline && registrationDeadline >= startDate) {
     throw new Error("Registration deadline must be before the event starts");
   }
 
@@ -84,7 +84,7 @@ export async function createEvent(organizerId, data = {}) {
   const eventData = {
     title: data.title.trim(),
     description: data.description || "",
-    venue: data.venue || "",
+    location: data.location || "",
     category: data.category ?? null,
     imageUrl: data.imageUrl ?? null,
     department: data.department ?? null,
@@ -106,7 +106,7 @@ export async function createEvent(organizerId, data = {}) {
 }
 
 // Updates an existing event after verifying that the caller is the original organizer.
-// Ensures capacity is never reduced below the number of students already actively registered.
+// Ensures capacity is never reduced below the number of students already actively confirmed.
 // Merges and re-validates dates against the existing stored timestamps.
 export async function updateEvent(eventId, organizerId, data = {}) {
   // Find the event to ensure it exists
@@ -143,7 +143,7 @@ export async function updateEvent(eventId, organizerId, data = {}) {
     const currentRegistered = await prisma.registration.count({
       where: {
         eventId,
-        status: "REGISTERED",
+        status: "CONFIRMED",
       },
     });
 
@@ -154,16 +154,18 @@ export async function updateEvent(eventId, organizerId, data = {}) {
 
   // Merge updated dates with existing stored dates to validate overall chronological consistency
   const finalStartDate = data.startDate !== undefined ? new Date(data.startDate) : event.startDate;
-  const finalEndDate = data.endDate !== undefined ? new Date(data.endDate) : event.endDate;
+  const finalEndDate = data.endDate !== undefined
+    ? (data.endDate ? new Date(data.endDate) : null)
+    : event.endDate;
   const finalDeadline = data.registrationDeadline !== undefined
-    ? new Date(data.registrationDeadline)
+    ? (data.registrationDeadline ? new Date(data.registrationDeadline) : null)
     : event.registrationDeadline;
 
-  if (finalEndDate <= finalStartDate) {
+  if (finalEndDate && finalEndDate <= finalStartDate) {
     throw new Error("End date must be after start date");
   }
 
-  if (finalDeadline >= finalStartDate) {
+  if (finalDeadline && finalDeadline >= finalStartDate) {
     throw new Error("Registration deadline must be before the event starts");
   }
 
@@ -171,7 +173,7 @@ export async function updateEvent(eventId, organizerId, data = {}) {
   const updateData = {};
   if (data.title !== undefined) updateData.title = data.title.trim();
   if (data.description !== undefined) updateData.description = data.description;
-  if (data.venue !== undefined) updateData.venue = data.venue;
+  if (data.location !== undefined) updateData.location = data.location;
   if (data.category !== undefined) updateData.category = data.category;
   if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
   if (data.department !== undefined) updateData.department = data.department;
@@ -190,4 +192,3 @@ export async function updateEvent(eventId, organizerId, data = {}) {
     data: updateData,
   });
 }
-

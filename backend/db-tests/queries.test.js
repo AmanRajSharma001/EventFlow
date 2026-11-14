@@ -43,7 +43,7 @@ async function createEvent({ status = "PUBLISHED", capacity = 10, deadlineOffset
     data: {
       title,
       description: "Test event description",
-      venue: "Test Hall",
+      location: "Test Hall",
       startDate,
       endDate,
       registrationDeadline: deadline,
@@ -57,7 +57,7 @@ async function createEvent({ status = "PUBLISHED", capacity = 10, deadlineOffset
 }
 
 // Helper to create a registration record for a student and an event.
-async function createRegistration(studentId, eventId, status = "REGISTERED") {
+async function createRegistration(studentId, eventId, status = "CONFIRMED") {
   const reg = await prisma.registration.create({
     data: {
       studentId,
@@ -139,7 +139,7 @@ test("getStudentHistory returns student registrations with event details and att
   assert.equal(history.length, 2, "Student should have 2 registrations in history");
   // Check ordering: newest registration first
   assert.ok(
-    new Date(history[0].registeredAt) >= new Date(history[1].registeredAt),
+    new Date(history[0].createdAt) >= new Date(history[1].createdAt),
     "History should be ordered newest first"
   );
 
@@ -197,9 +197,9 @@ test("getUpcomingEvents returns published events in future with registeredCount"
   const student2 = await createUser("STUDENT");
   const student3 = await createUser("STUDENT");
 
-  // Create 2 REGISTERED registrations and 1 CANCELLED registration
-  await createRegistration(student1.id, event.id, "REGISTERED");
-  await createRegistration(student2.id, event.id, "REGISTERED");
+  // Create 2 CONFIRMED registrations and 1 CANCELLED registration
+  await createRegistration(student1.id, event.id, "CONFIRMED");
+  await createRegistration(student2.id, event.id, "CONFIRMED");
   await createRegistration(student3.id, event.id, "CANCELLED");
 
   const upcomingEvents = await getUpcomingEvents();
@@ -209,8 +209,8 @@ test("getUpcomingEvents returns published events in future with registeredCount"
   assert.ok(foundEvent, "Our published test event must be in the upcoming events list");
   assert.equal(foundEvent.id, event.id);
   assert.equal(foundEvent.status, "PUBLISHED");
-  // registeredCount should count only active REGISTERED registrations (2), excluding CANCELLED
-  assert.equal(foundEvent.registeredCount, 2, "registeredCount must count only REGISTERED registrations");
+  // registeredCount should count only active CONFIRMED registrations (2), excluding CANCELLED
+  assert.equal(foundEvent.registeredCount, 2, "registeredCount must count only CONFIRMED registrations");
 
   // Confirm organizer password is not exposed
   if (foundEvent.organizer) {

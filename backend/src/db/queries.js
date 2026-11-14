@@ -26,7 +26,7 @@ export async function getStudentHistory(studentId) {
       attendance: true,
     },
     orderBy: {
-      registeredAt: "desc",
+      createdAt: "desc",
     },
   });
 }
@@ -49,13 +49,13 @@ export async function getEventRegistrations(eventId) {
       attendance: true,
     },
     orderBy: {
-      registeredAt: "desc",
+      createdAt: "desc",
     },
   });
 }
 
 // Returns all PUBLISHED events whose start date is in the future, ordered by start date ascending.
-// Computes and attaches registeredCount (counting active REGISTERED registrations only).
+// Computes and attaches registeredCount (counting active CONFIRMED registrations only).
 // Organizer password is excluded to keep API payloads secure.
 export async function getUpcomingEvents() {
   const now = new Date();
@@ -78,7 +78,7 @@ export async function getUpcomingEvents() {
       _count: {
         select: {
           registrations: {
-            where: { status: "REGISTERED" },
+            where: { status: "CONFIRMED" },
           },
         },
       },
@@ -128,4 +128,3 @@ export async function getEventAnnouncements(eventId) {
     },
   });
 }
-

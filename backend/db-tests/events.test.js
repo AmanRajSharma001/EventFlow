@@ -50,7 +50,7 @@ async function setupTestEvent({ organizerId, status = "PUBLISHED", capacity = 10
     data: {
       title,
       description: "Direct test event description",
-      venue: "Main Hall",
+      location: "Main Hall",
       startDate: dates.startDate,
       endDate: dates.endDate,
       registrationDeadline: dates.registrationDeadline,
@@ -64,7 +64,7 @@ async function setupTestEvent({ organizerId, status = "PUBLISHED", capacity = 10
 }
 
 // Helper to create a registration record for a student and an event.
-async function createRegistration(studentId, eventId, status = "REGISTERED") {
+async function createRegistration(studentId, eventId, status = "CONFIRMED") {
   const reg = await prisma.registration.create({
     data: {
       studentId,
@@ -125,7 +125,7 @@ test("getEventById returns organizer name and registeredCount and no password", 
   const organizer = await createUser("ORGANIZER");
   const event = await setupTestEvent({ organizerId: organizer.id });
   const student = await createUser("STUDENT");
-  await createRegistration(student.id, event.id, "REGISTERED");
+  await createRegistration(student.id, event.id, "CONFIRMED");
 
   const found = await getEventById(event.id);
 
@@ -295,8 +295,8 @@ test("updateEvent rejects capacity below the registered count", async () => {
 
   const student1 = await createUser("STUDENT");
   const student2 = await createUser("STUDENT");
-  await createRegistration(student1.id, event.id, "REGISTERED");
-  await createRegistration(student2.id, event.id, "REGISTERED");
+  await createRegistration(student1.id, event.id, "CONFIRMED");
+  await createRegistration(student2.id, event.id, "CONFIRMED");
 
   await assert.rejects(
     () =>

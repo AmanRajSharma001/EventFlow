@@ -42,7 +42,7 @@ async function createEvent({ status = "PUBLISHED", capacity = 20, deadlineOffset
     data: {
       title,
       description: "Test event for analytics",
-      venue: "Test Hall",
+      location: "Test Hall",
       startDate,
       endDate,
       registrationDeadline: deadline,
@@ -56,7 +56,7 @@ async function createEvent({ status = "PUBLISHED", capacity = 20, deadlineOffset
 }
 
 // Helper to create a registration record for a student and an event.
-async function createRegistration(studentId, eventId, status = "REGISTERED") {
+async function createRegistration(studentId, eventId, status = "CONFIRMED") {
   const reg = await prisma.registration.create({
     data: {
       studentId,
@@ -196,14 +196,14 @@ test("getTopEvents orders events by registered registrations descending", async 
   const s1 = await createUser();
   const s2 = await createUser();
   const s3 = await createUser();
-  await createRegistration(s1.id, eventA.id, "REGISTERED");
-  await createRegistration(s2.id, eventA.id, "REGISTERED");
-  await createRegistration(s3.id, eventA.id, "REGISTERED");
+  await createRegistration(s1.id, eventA.id, "CONFIRMED");
+  await createRegistration(s2.id, eventA.id, "CONFIRMED");
+  await createRegistration(s3.id, eventA.id, "CONFIRMED");
 
   // Register 1 student for eventB, plus 1 CANCELLED registration
   const s4 = await createUser();
   const s5 = await createUser();
-  await createRegistration(s4.id, eventB.id, "REGISTERED");
+  await createRegistration(s4.id, eventB.id, "CONFIRMED");
   await createRegistration(s5.id, eventB.id, "CANCELLED");
 
   // Fetch top events with a large enough limit to include our newly created events

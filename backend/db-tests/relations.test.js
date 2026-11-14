@@ -43,7 +43,7 @@ async function createEvent(organizerId) {
     data: {
       title: randomTitle(),
       description: "Test event description",
-      venue: "Test Venue",
+      location: "Test Venue",
       startDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
       endDate: new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000),
       registrationDeadline: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
@@ -160,7 +160,7 @@ test("creating an event with a non-existent organizerId is rejected (P2003, fore
       data: {
         title: randomTitle(),
         description: "Should never be created",
-        venue: "Nowhere",
+        location: "Nowhere",
         startDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
         endDate: new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000),
         registrationDeadline: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
