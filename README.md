@@ -348,8 +348,9 @@ npm run dist:mac
 ```
 
 The installer will be generated in the `release/` folder:
-- **Installer file**: `release/EventFlow-macOS-1.0.2.dmg` (v1.0.0 and v1.0.1 preserved)
+- **Installer file**: `release/EventFlow-macOS-1.0.3.dmg` (v1.0.0, v1.0.1, and v1.0.2 preserved)
 - **Architecture**: Apple Silicon ARM64
+- **Code Signing**: ARM64 Ad-Hoc Signed with sealed bundle resources (`edu.college.eventflow`)
 
 ### Database Configuration for Packaged Desktop Mode
 
@@ -373,13 +374,20 @@ To ensure the packaged desktop application securely connects to your PostgreSQL 
    open /Applications/EventFlow.app
    ```
 
-### Installing the Packaged App
+### Installing and Running on macOS
 
-1. Double-click `release/EventFlow-macOS-1.0.1.dmg` to mount the disk image.
-2. Drag **EventFlow** into the **Applications** folder.
+1. Double-click `release/EventFlow-macOS-1.0.3.dmg` to mount the disk image.
+2. Drag **EventFlow** into your **Applications** folder.
 3. Open EventFlow from Launchpad or Applications.
 
-*Gatekeeper Note: Because this academic project is not signed with a paid Apple Developer certificate, macOS Gatekeeper may show an unsigned developer prompt on first launch. To open: Right-click (Control-click) `EventFlow.app` in `/Applications` and select **Open**, then click **Open** in the confirmation dialog.*
+#### macOS Gatekeeper First-Launch Note
+Because EventFlow is an academic student project and is not signed with a paid ($99/yr) Apple Developer ID Certificate, Apple Gatekeeper blocks apps downloaded from the web by default with the prompt:
+> *"Apple could not verify EventFlow is free of malware that may harm your Mac or compromise your privacy."*
+
+The application's code signature and resource seal are fully verified and intact. To launch on macOS Sonoma or Sequoia:
+- **Method 1 (Recommended)**: Go to **System Settings → Privacy & Security**. Scroll down to the **Security** section where you will see: *"EventFlow was blocked from use because it is not from an identified developer."* Click **Open Anyway**, authenticate with Touch ID or password, and click **Open**.
+- **Method 2**: In `/Applications`, **Right-click (or Control-click)** `EventFlow.app`, choose **Open** from the context menu, then click **Open** in the dialog.
+- Once opened once, macOS registers the user approval and EventFlow opens normally without prompts on all subsequent launches.
 
 ---
 
@@ -455,7 +463,7 @@ All API endpoints are prefixed with `/api`:
 
 ## 18. Known Limitations
 
-- **Gatekeeper Warning**: As an academic student project, the macOS DMG is unsigned and requires a right-click "Open" bypass on first launch.
+- **Gatekeeper Unnotarized Developer Prompt**: As an academic open-source student project developed without an enterprise Apple Developer Program subscription, the application is code-signed with ARM64 ad-hoc sealing rather than an Apple Developer ID certificate. On macOS Sonoma/Sequoia, first launch requires clicking "Open Anyway" in System Settings > Privacy & Security or right-clicking to Open.
 - **Single Window Experience**: Designed as a unified single-window desktop application. Multi-window workflows are not currently enabled.
 - **Offline Mode**: If PostgreSQL is stopped, the application displays clear dependency warnings and switches to read-only demonstration accounts. Real-time check-in scanning requires a running PostgreSQL instance.
 
