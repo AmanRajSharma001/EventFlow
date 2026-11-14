@@ -1,0 +1,78 @@
+{
+  "name": "eventflow",
+  "productName": "EventFlow",
+  "version": "1.0.0",
+  "description": "EventFlow — College Event Management & Participation System",
+  "main": "electron/main.cjs",
+  "author": "EventFlow Team (Aman, Azmol, Sagar)",
+  "license": "ISC",
+  "scripts": {
+    "start": "electron .",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "node electron/dev.js",
+    "build:frontend": "npm run build --prefix frontend",
+    "build": "npm run build:frontend",
+    "test:backend": "npm test --prefix backend",
+    "test:db": "npm run db:test --prefix backend",
+    "test": "npm test --prefix backend",
+    "dist:mac": "npm run build:frontend && electron-builder --mac dmg --arm64",
+    "pack:mac": "npm run build:frontend && electron-builder --mac --dir --arm64"
+  },
+  "build": {
+    "appId": "edu.college.eventflow",
+    "productName": "EventFlow",
+    "asar": true,
+    "asarUnpack": [
+      "backend/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/dist/**/*",
+      "backend/src/**/*",
+      "backend/prisma/**/*",
+      "backend/generated/**/*",
+      "backend/package.json",
+      "backend/node_modules/**/*",
+      "build/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
+    },
+    "dmg": {
+      "title": "EventFlow",
+      "artifactName": "EventFlow-macOS.dmg",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.3.2",
+    "electron-builder": "^26.18.0"
+  }
+}

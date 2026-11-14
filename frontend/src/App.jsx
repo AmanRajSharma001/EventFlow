@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { OrganizerProvider } from './context/OrganizerContext';
@@ -96,11 +96,13 @@ function PagePlaceholder({ title, description }) {
 }
 
 export default function App() {
+  const Router = typeof window !== 'undefined' && window.location.protocol === 'file:' ? HashRouter : BrowserRouter;
+
   return (
     <AuthProvider>
       <OrganizerProvider>
         <AdminProvider>
-          <BrowserRouter>
+          <Router>
             <RouteScrollManager />
             <Toaster position="top-right" />
 
@@ -181,7 +183,7 @@ export default function App() {
                 <Route path="profile" element={<AdminProfilePage />} />
               </Route>
             </Routes>
-          </BrowserRouter>
+          </Router>
         </AdminProvider>
       </OrganizerProvider>
     </AuthProvider>

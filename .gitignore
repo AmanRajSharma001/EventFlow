@@ -3,5 +3,7 @@
 !.env.example
 node_modules/
 dist/
+release/
+*.dmg
 coverage/
 backend/generated/
