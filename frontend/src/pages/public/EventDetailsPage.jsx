@@ -22,13 +22,11 @@ export default function EventDetailsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [imageFailed, setImageFailed] = useState(false);
-  const [isSubmittingRegistration, setIsSubmittingRegistration] = useState(false);
   const {
     user,
     registeredEventIds,
     registerForEvent,
     unregisterFromEvent,
-    registrationSource,
   } = useAuth();
 
   // Async data & hybrid fallback state
@@ -55,13 +53,19 @@ export default function EventDetailsPage() {
             setEvent(liveEvent);
             setIsUsingFallback(false);
           } else {
-            setEvent(null);
-            setNotFound(true);
+            const fallbackList = getFallbackCatalogEvents();
+            const found = fallbackList.find((item) => item.id === id);
+            if (found) {
+              setEvent(found);
+              setIsUsingFallback(true);
+            } else {
+              setNotFound(true);
+            }
           }
         }
       } catch (err) {
         if (!isMounted) return;
-        if (isDatabasePendingError(err)) {
+        if (isDatabasePendingError(err) || err?.response?.status === 404) {
           const fallbackList = getFallbackCatalogEvents();
           const found = fallbackList.find((item) => item.id === id);
           if (found) {
@@ -72,7 +76,6 @@ export default function EventDetailsPage() {
             setNotFound(true);
           }
         } else {
-          setEvent(null);
           setError(err?.response?.data?.message || err.message || 'Failed to load event details.');
         }
       } finally {
@@ -140,21 +143,15 @@ export default function EventDetailsPage() {
     })
     .slice(0, 3);
 
-  const handleRegister = async () => {
+  const handleRegister = () => {
     if (!user) {
       navigate('/login', { state: { from: location.pathname } });
       return;
     }
-    setIsSubmittingRegistration(true);
-    await registerForEvent(event.id, event.title);
-    setIsSubmittingRegistration(false);
+    registerForEvent(event.id, event.title);
   };
 
-  const handleWithdraw = async () => {
-    setIsSubmittingRegistration(true);
-    await unregisterFromEvent(event.id, event.title);
-    setIsSubmittingRegistration(false);
-  };
+  const handleWithdraw = () => unregisterFromEvent(event.id, event.title);
 
   return (
     <div>
@@ -180,7 +177,7 @@ export default function EventDetailsPage() {
 
         <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-200">
           {imageFailed ? (
-            <div aria-hidden="true" className="flex h-64 w-full flex-col items-center justify-center gap-3 bg-slate-900 text-slate-300 sm:h-80 lg:h-104">
+            <div aria-hidden="true" className="flex h-64 w-full flex-col items-center justify-center gap-3 bg-slate-900 text-slate-300 sm:h-80 lg:h-[26rem]">
               <ImageOff className="h-8 w-8" />
               <span className="text-sm font-medium">Event cover unavailable</span>
             </div>
@@ -189,10 +186,10 @@ export default function EventDetailsPage() {
               src={event.imageUrl}
               alt=""
               onError={() => setImageFailed(true)}
-              className="h-64 w-full object-cover sm:h-80 lg:h-104"
+              className="h-64 w-full object-cover sm:h-80 lg:h-[26rem]"
             />
           )}
-          <div className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-slate-950/15 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-5 text-white sm:p-8 lg:p-10">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="default" className="border-white/30 bg-white/95 text-slate-900">{event.category}</Badge>
@@ -271,13 +268,9 @@ export default function EventDetailsPage() {
             ) : isClosed ? (
               <Button type="button" disabled className="w-full">{isFull ? 'Registration full' : 'Registration closed'}</Button>
             ) : isRegistered && canRegister ? (
-              <Button type="button" variant="secondary" className="w-full" onClick={handleWithdraw} disabled={isSubmittingRegistration}>
-                {isSubmittingRegistration ? 'Updating registration...' : 'Withdraw registration'}
-              </Button>
+              <Button type="button" variant="secondary" className="w-full" onClick={handleWithdraw}>Withdraw registration</Button>
             ) : canRegister ? (
-              <Button type="button" className="w-full" onClick={handleRegister} disabled={isSubmittingRegistration}>
-                {isSubmittingRegistration ? 'Registering...' : 'Register for this event'}
-              </Button>
+              <Button type="button" className="w-full" onClick={handleRegister}>Register for this event</Button>
             ) : user ? (
               <Button type="button" disabled className="w-full">Student account required</Button>
             ) : (
@@ -286,12 +279,8 @@ export default function EventDetailsPage() {
           </div>
           <p className="mt-3 text-xs leading-5 text-slate-500">
             {isRegistered && canRegister
-              ? registrationSource === 'live'
-                ? 'Your live registration is linked to your EventFlow account.'
-                : 'This preview registration is saved in this browser only.'
-              : registrationSource === 'live'
-                ? 'Registration status is connected to the EventFlow service.'
-                : 'Sample event details and local preview registration; no campus service is connected.'}
+              ? 'This preview registration is saved in this browser only.'
+              : 'Sample event details and local preview registration; no campus service is connected.'}
           </p>
           <Link to="/events" className="mt-5 inline-flex items-center gap-2 rounded-md text-sm font-semibold text-blue-700 hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
             <ArrowLeft aria-hidden="true" className="h-4 w-4" />
