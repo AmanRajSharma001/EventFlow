@@ -19,7 +19,7 @@ import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
 
 export default function OrganizerEventsPage() {
-  const { events, deleteEvent, isLiveSync, eventsError } = useOrganizer();
+  const { events, deleteEvent, isLiveSync } = useOrganizer();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -92,12 +92,6 @@ export default function OrganizerEventsPage() {
           Create New Event
         </Button>
       </div>
-
-      {eventsError && (
-        <div className="rounded-xl border border-red-100 bg-red-50/70 p-4 text-sm text-red-800">
-          {eventsError}
-        </div>
-      )}
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

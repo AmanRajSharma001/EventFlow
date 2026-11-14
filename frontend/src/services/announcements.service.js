@@ -1,8 +1,4 @@
 import api from './api';
-import {
-  adaptAnnouncement,
-  adaptAnnouncementsList,
-} from './adapters/announcementAdapter';
 
 /**
  * Announcement API Service.
@@ -17,7 +13,7 @@ export const announcementsService = {
    */
   async getEventAnnouncements(eventId) {
     const response = await api.get(`/events/${eventId}/announcements`);
-    return adaptAnnouncementsList(response.data?.data?.announcements || []);
+    return response.data?.data?.announcements || [];
   },
 
   /**
@@ -29,9 +25,7 @@ export const announcementsService = {
    */
   async createEventAnnouncement(eventId, payload) {
     const response = await api.post(`/events/${eventId}/announcements`, payload);
-    return adaptAnnouncement(
-      response.data?.data?.announcement || response.data
-    );
+    return response.data?.data?.announcement || response.data;
   },
 
   /**

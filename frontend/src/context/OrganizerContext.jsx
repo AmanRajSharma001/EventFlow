@@ -68,7 +68,6 @@ export function OrganizerProvider({ children }) {
 
   const [isLiveSync, setIsLiveSync] = useState(false);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
-  const [eventsError, setEventsError] = useState(null);
 
   // Sync organizer events from live backend if available
   const refreshEvents = useCallback(async () => {
@@ -76,10 +75,9 @@ export function OrganizerProvider({ children }) {
     if (!token) return;
 
     setIsLoadingEvents(true);
-    setEventsError(null);
     try {
       const liveEvents = await eventsService.getOrganizerMyEvents();
-      if (Array.isArray(liveEvents)) {
+      if (Array.isArray(liveEvents) && liveEvents.length > 0) {
         setEvents(liveEvents);
         setIsLiveSync(true);
       }
@@ -87,15 +85,6 @@ export function OrganizerProvider({ children }) {
       if (isDatabasePendingError(error)) {
         // Known fallback: Keep local mock events
         setIsLiveSync(false);
-      } else {
-        setEventsError(
-          error?.response?.data?.message ||
-            'Unable to load organizer events. Showing saved preview data.'
-        );
-        toast.error(
-          error?.response?.data?.message ||
-            'Unable to load organizer events. Showing saved preview data.'
-        );
       }
     } finally {
       setIsLoadingEvents(false);
@@ -103,12 +92,27 @@ export function OrganizerProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const syncTimer = setTimeout(() => {
-      refreshEvents();
-    }, 0);
-
-    return () => clearTimeout(syncTimer);
-  }, [refreshEvents]);
+    let isCancelled = false;
+    async function initSync() {
+      const token = localStorage.getItem('eventflow_token');
+      if (!token) return;
+      try {
+        const liveEvents = await eventsService.getOrganizerMyEvents();
+        if (!isCancelled && Array.isArray(liveEvents) && liveEvents.length > 0) {
+          setEvents(liveEvents);
+          setIsLiveSync(true);
+        }
+      } catch (error) {
+        if (!isCancelled && isDatabasePendingError(error)) {
+          setIsLiveSync(false);
+        }
+      }
+    }
+    initSync();
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   // Create a new event (Hybrid: tries backend API, falls back to local mock state)
   const createEvent = async (data, isPublish = true) => {
@@ -120,13 +124,8 @@ export function OrganizerProvider({ children }) {
         if (isPublish) {
           try {
             finalEvent = await eventsService.publishEvent(created.id);
-          } catch (error) {
-            toast.error(
-              isDatabasePendingError(error)
-                ? 'Event saved as a draft in preview mode (Database pending).'
-                : error?.response?.data?.message ||
-                    'Event was created as a draft, but publishing failed.'
-            );
+          } catch {
+            // Keep draft status if publish endpoint fails
           }
         }
         setEvents((prev) => [finalEvent, ...prev]);
@@ -374,7 +373,6 @@ export function OrganizerProvider({ children }) {
         activityItems,
         isLiveSync,
         isLoadingEvents,
-        eventsError,
         refreshEvents,
         createEvent,
         updateEvent,

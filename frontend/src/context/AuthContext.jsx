@@ -8,8 +8,6 @@ import {
 } from '../data/mockStudentData';
 import { AuthContext } from './authContextDef';
 import authService from '../services/auth.service';
-import registrationsService from '../services/registrations.service';
-import attendanceService from '../services/attendance.service';
 import { isDatabasePendingError, getPendingDependencyInfo } from '../services/dbStatus';
 
 const USER_STORAGE_KEY = 'eventflow_user';
@@ -84,81 +82,10 @@ export function AuthProvider({ children }) {
     )
   );
   const [activityItems, setActivityItems] = useState(INITIAL_ACTIVITY_ITEMS);
-  const [demoAttendanceRecords] = useState(INITIAL_ATTENDANCE_RECORDS);
-  const [liveAttendanceRecords, setLiveAttendanceRecords] = useState([]);
-  const [attendanceSource, setAttendanceSource] = useState('demo');
-  const [isLoadingAttendance, setIsLoadingAttendance] = useState(false);
-  const [attendanceError, setAttendanceError] = useState(null);
-  const [registrations, setRegistrations] = useState([]);
-  const [registrationSource, setRegistrationSource] = useState('demo');
-  const [isLoadingRegistrations, setIsLoadingRegistrations] = useState(false);
-  const [registrationError, setRegistrationError] = useState(null);
+  const [attendanceRecords] = useState(INITIAL_ATTENDANCE_RECORDS);
   const [isRestoringSession, setIsRestoringSession] = useState(() =>
     Boolean(localStorage.getItem(TOKEN_STORAGE_KEY))
   );
-
-  const refreshRegistrations = async () => {
-    if (!localStorage.getItem(TOKEN_STORAGE_KEY)) return [];
-
-    setIsLoadingRegistrations(true);
-    setRegistrationError(null);
-
-    try {
-      const liveRegistrations = await registrationsService.getMyRegistrations();
-      const activeIds = liveRegistrations
-        .filter((registration) => !registration.isCancelled)
-        .map((registration) => registration.eventId);
-      const cancelledIds = liveRegistrations
-        .filter((registration) => registration.isCancelled)
-        .map((registration) => registration.eventId);
-
-      setRegistrations(liveRegistrations);
-      setRegisteredEventIds(activeIds);
-      setCancelledEventIds(cancelledIds);
-      setRegistrationSource('live');
-      return liveRegistrations;
-    } catch (error) {
-      if (isDatabasePendingError(error)) {
-        setRegistrationSource('demo');
-        return [];
-      }
-
-      const message =
-        error?.response?.data?.message ||
-        'Unable to load your registrations. Please try again.';
-      setRegistrationError(message);
-      return null;
-    } finally {
-      setIsLoadingRegistrations(false);
-    }
-  };
-
-  const refreshAttendance = async () => {
-    if (!localStorage.getItem(TOKEN_STORAGE_KEY)) return [];
-
-    setIsLoadingAttendance(true);
-    setAttendanceError(null);
-
-    try {
-      const liveAttendance = await attendanceService.getMyAttendance();
-      setLiveAttendanceRecords(liveAttendance);
-      setAttendanceSource('live');
-      return liveAttendance;
-    } catch (error) {
-      if (isDatabasePendingError(error)) {
-        setAttendanceSource('demo');
-        return [];
-      }
-
-      const message =
-        error?.response?.data?.message ||
-        'Unable to load your attendance records. Please try again.';
-      setAttendanceError(message);
-      return null;
-    } finally {
-      setIsLoadingAttendance(false);
-    }
-  };
 
   // Restore authenticated session on startup if token exists
   useEffect(() => {
@@ -169,7 +96,7 @@ export function AuthProvider({ children }) {
 
     authService
       .getMe()
-      .then(async (liveUser) => {
+      .then((liveUser) => {
         if (!isMounted) return;
         if (liveUser) {
           setUser((current) => ({
@@ -178,8 +105,6 @@ export function AuthProvider({ children }) {
             isDemoSession: false,
             authType: 'live',
           }));
-          await refreshRegistrations();
-          await refreshAttendance();
         }
       })
       .catch((error) => {
@@ -242,15 +167,9 @@ export function AuthProvider({ children }) {
           authType: 'live',
         };
         setUser(sessionUser);
-        await refreshRegistrations();
-        await refreshAttendance();
         toast.success(`Welcome back, ${sessionUser.name}!`);
         return { success: true, user: sessionUser };
       }
-
-      const errorMsg = 'Authentication service returned an incomplete session.';
-      toast.error(errorMsg);
-      return { success: false, error: errorMsg };
     } catch (error) {
       if (isDatabasePendingError(error)) {
         // Known fallback: Express backend is running, but PostgreSQL is pending Teammate 3's setup
@@ -349,18 +268,11 @@ export function AuthProvider({ children }) {
           authType: 'live',
         };
         setUser(registeredUser);
-        setRegistrationSource('live');
-        await refreshRegistrations();
-        await refreshAttendance();
         toast.success(
           `Account created successfully! Note: Academic profile fields will sync once PostgreSQL database schema expands.`
         );
         return { success: true, user: registeredUser };
       }
-
-      const errorMsg = 'Registration service returned an incomplete session.';
-      toast.error(errorMsg);
-      return { success: false, error: errorMsg };
     } catch (error) {
       if (isDatabasePendingError(error)) {
         toast.error(
@@ -409,7 +321,7 @@ export function AuthProvider({ children }) {
     return updated;
   };
 
-  const registerForEvent = async (eventId, eventTitle) => {
+  const registerForEvent = (eventId, eventTitle) => {
     if (!user) {
       toast.error('Please sign in with your student credentials to register.');
       return false;
@@ -421,51 +333,6 @@ export function AuthProvider({ children }) {
     if (registeredEventIds.includes(eventId)) {
       toast.error('You are already registered for this event!');
       return false;
-    }
-
-    if (registrationSource === 'live' && localStorage.getItem(TOKEN_STORAGE_KEY)) {
-      try {
-        const registration = await registrationsService.registerForEvent(eventId, {
-          department: user.department,
-          semester: user.semester,
-        });
-
-        if (!registration) {
-          toast.error('The registration response was incomplete. Please try again.');
-          return false;
-        }
-
-        setRegistrations((prev) => [
-          ...prev.filter((item) => item.eventId !== eventId || item.isCancelled),
-          registration,
-        ]);
-        setRegisteredEventIds((prev) => [...new Set([...prev, eventId])]);
-        setCancelledEventIds((prev) => prev.filter((id) => id !== eventId));
-        setActivityItems((prev) => [
-          {
-            id: 'act-' + Date.now(),
-            type: 'registration',
-            title: `Registered for ${eventTitle}`,
-            description: 'Confirmed registration saved to your EventFlow account.',
-            timestamp: 'Just now',
-            eventId,
-          },
-          ...prev,
-        ]);
-        toast.success(`Registration confirmed for ${eventTitle}.`);
-        return true;
-      } catch (error) {
-        if (!isDatabasePendingError(error)) {
-          const message =
-            error?.response?.data?.message ||
-            'Unable to register for this event. Please try again.';
-          toast.error(message);
-          return false;
-        }
-
-        setRegistrationSource('demo');
-        toast.success('Database integration is pending. Preview registration is active.');
-      }
     }
 
     setRegisteredEventIds((prev) => [...prev, eventId]);
@@ -488,58 +355,12 @@ export function AuthProvider({ children }) {
     return true;
   };
 
-  const cancelRegistration = async (
-    registrationOrEventId,
-    eventTitle,
-    reason = 'Student voluntary cancellation'
-  ) => {
-    const liveRegistration =
-      typeof registrationOrEventId === 'object'
-        ? registrationOrEventId
-        : registrations.find(
-            (registration) =>
-              registration.eventId === registrationOrEventId && !registration.isCancelled
-          );
-    const eventId =
-      typeof registrationOrEventId === 'object'
-        ? registrationOrEventId.eventId
-        : registrationOrEventId;
+  const unregisterFromEvent = (eventId, eventTitle) => {
+    setRegisteredEventIds((prev) => prev.filter((id) => id !== eventId));
+    toast.success(`Preview registration withdrawn for ${eventTitle}.`);
+  };
 
-    if (
-      registrationSource === 'live' &&
-      liveRegistration?.registrationId &&
-      localStorage.getItem(TOKEN_STORAGE_KEY)
-    ) {
-      try {
-        const cancelledRegistration = await registrationsService.cancelRegistration(
-          liveRegistration.registrationId,
-          reason
-        );
-        setRegistrations((prev) =>
-          prev.map((registration) =>
-            registration.registrationId === liveRegistration.registrationId
-              ? cancelledRegistration || { ...registration, isCancelled: true, statusLabel: 'Cancelled' }
-              : registration
-          )
-        );
-        setRegisteredEventIds((prev) => prev.filter((id) => id !== eventId));
-        setCancelledEventIds((prev) => [...new Set([...prev, eventId])]);
-        toast.success(`Registration cancelled for ${eventTitle}.`);
-        return true;
-      } catch (error) {
-        if (!isDatabasePendingError(error)) {
-          const message =
-            error?.response?.data?.message ||
-            'Unable to cancel this registration. Please try again.';
-          toast.error(message);
-          return false;
-        }
-
-        setRegistrationSource('demo');
-        toast.success('Database integration is pending. Preview cancellation is active.');
-      }
-    }
-
+  const cancelRegistration = (eventId, eventTitle, reason = 'Student voluntary cancellation') => {
     setRegisteredEventIds((prev) => prev.filter((id) => id !== eventId));
     setCancelledEventIds((prev) => (prev.includes(eventId) ? prev : [...prev, eventId]));
 
@@ -557,11 +378,7 @@ export function AuthProvider({ children }) {
     ]);
 
     toast.success(`Registration cancelled for ${eventTitle}.`);
-    return true;
   };
-
-  const unregisterFromEvent = (eventId, eventTitle) =>
-    cancelRegistration(eventId, eventTitle);
 
   const markNotificationAsRead = (id) => {
     setNotifications((prev) =>
@@ -583,12 +400,6 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     localStorage.removeItem(USER_STORAGE_KEY);
     setUser(null);
-    setRegistrations([]);
-    setRegistrationSource('demo');
-    setRegistrationError(null);
-    setLiveAttendanceRecords([]);
-    setAttendanceSource('demo');
-    setAttendanceError(null);
     toast.success('Signed out successfully.');
   };
 
@@ -605,17 +416,7 @@ export function AuthProvider({ children }) {
         cancelledEventIds,
         notifications,
         activityItems,
-        attendanceRecords:
-          attendanceSource === 'live' ? liveAttendanceRecords : demoAttendanceRecords,
-        attendanceSource,
-        isLoadingAttendance,
-        attendanceError,
-        refreshAttendance,
-        registrations,
-        registrationSource,
-        isLoadingRegistrations,
-        registrationError,
-        refreshRegistrations,
+        attendanceRecords,
         login,
         registerStudent,
         updateStudentProfile,

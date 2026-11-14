@@ -1,5 +1,4 @@
 import api from './api';
-import { adaptStudentAttendanceList } from './adapters/attendanceAdapter';
 
 /**
  * Attendance & Check-in API Service.
@@ -37,11 +36,7 @@ export const attendanceService = {
    */
   async getMyAttendance() {
     const response = await api.get('/attendance/my');
-    return adaptStudentAttendanceList(
-      response.data?.data?.attendanceHistory ||
-        response.data?.data?.attendance ||
-        []
-    );
+    return response.data?.data?.attendance || [];
   },
 
   /**

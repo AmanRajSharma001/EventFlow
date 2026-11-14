@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Megaphone,
@@ -14,19 +14,11 @@ import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import FormField from '../../components/common/FormField';
 import EmptyState from '../../components/common/EmptyState';
-import LoadingState from '../../components/common/LoadingState';
-import announcementsService from '../../services/announcements.service';
-import { isDatabasePendingError } from '../../services/dbStatus';
 
 export default function OrganizerAnnouncementsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const {
-    events,
-    announcements,
-    addAnnouncement,
-    deleteAnnouncement,
-  } = useOrganizer();
+  const { events, announcements, addAnnouncement, deleteAnnouncement } = useOrganizer();
 
   const currentEvent = events.find((e) => e.id === id) || events[0];
 
@@ -39,62 +31,16 @@ export default function OrganizerAnnouncementsPage() {
   });
   const [errors, setErrors] = useState({});
   const [announcementToDelete, setAnnouncementToDelete] = useState(null);
-  const [eventAnnouncements, setEventAnnouncements] = useState([]);
-  const [announcementSource, setAnnouncementSource] = useState('demo');
-  const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(false);
-  const [announcementError, setAnnouncementError] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const demoAnnouncements = useMemo(() => {
+  // Filter announcements for this event
+  const eventAnnouncements = useMemo(() => {
     if (!currentEvent) return [];
     return announcements
       .filter((a) => a.eventId === currentEvent.id)
       .sort((a, b) => Number(b.pinned || 0) - Number(a.pinned || 0));
   }, [announcements, currentEvent]);
 
-  const refreshAnnouncements = useCallback(async () => {
-    if (!currentEvent) return;
-
-    const token = localStorage.getItem('eventflow_token');
-    setAnnouncementError(null);
-    if (!token) {
-      setAnnouncementSource('demo');
-      setEventAnnouncements(demoAnnouncements);
-      return;
-    }
-
-    setIsLoadingAnnouncements(true);
-    try {
-      const liveAnnouncements = await announcementsService.getEventAnnouncements(
-        currentEvent.id
-      );
-      setEventAnnouncements(liveAnnouncements);
-      setAnnouncementSource('live');
-    } catch (error) {
-      if (isDatabasePendingError(error)) {
-        setAnnouncementSource('demo');
-        setEventAnnouncements(demoAnnouncements);
-      } else {
-        setAnnouncementSource('live');
-        setEventAnnouncements([]);
-        setAnnouncementError(
-          error?.response?.data?.message ||
-            'Unable to load event announcements.'
-        );
-      }
-    } finally {
-      setIsLoadingAnnouncements(false);
-    }
-  }, [currentEvent, demoAnnouncements]);
-
-  useEffect(() => {
-    const loadAnnouncements = async () => {
-      await refreshAnnouncements();
-    };
-    loadAnnouncements();
-  }, [refreshAnnouncements]);
-
-  const handleCreate = async (e) => {
+  const handleCreate = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
       setErrors({ title: 'Announcement title is required.' });
@@ -105,52 +51,10 @@ export default function OrganizerAnnouncementsPage() {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      if (announcementSource === 'live') {
-        const created = await announcementsService.createEventAnnouncement(
-          currentEvent.id,
-          {
-            title: formData.title.trim(),
-            message: formData.message.trim(),
-            priority: formData.priority.toUpperCase(),
-            isPinned: formData.pinned,
-          }
-        );
-        setEventAnnouncements((prev) => [created, ...prev]);
-      } else {
-        addAnnouncement({
-          eventId: currentEvent.id,
-          ...formData,
-        });
-        setEventAnnouncements((prev) => [
-          {
-            id: `demo-${Date.now()}`,
-            eventId: currentEvent.id,
-            publishedAt: 'Today · Just now',
-            ...formData,
-          },
-          ...prev,
-        ]);
-      }
-    } catch (error) {
-      if (isDatabasePendingError(error)) {
-        setAnnouncementSource('demo');
-        addAnnouncement({
-          eventId: currentEvent.id,
-          ...formData,
-        });
-      } else {
-        setAnnouncementError(
-          error?.response?.data?.message ||
-            'Unable to publish this announcement.'
-        );
-        setIsSubmitting(false);
-        return;
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    addAnnouncement({
+      eventId: currentEvent.id,
+      ...formData,
+    });
 
     setFormData({
       title: '',
@@ -162,37 +66,9 @@ export default function OrganizerAnnouncementsPage() {
     setFormOpen(false);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = () => {
     if (!announcementToDelete) return;
-    setIsSubmitting(true);
-    try {
-      if (announcementSource === 'live') {
-        await announcementsService.deleteAnnouncement(announcementToDelete.id);
-        setEventAnnouncements((prev) =>
-          prev.filter((announcement) => announcement.id !== announcementToDelete.id)
-        );
-      } else {
-        deleteAnnouncement(announcementToDelete.id);
-        setEventAnnouncements((prev) =>
-          prev.filter((announcement) => announcement.id !== announcementToDelete.id)
-        );
-      }
-    } catch (error) {
-      if (isDatabasePendingError(error)) {
-        setAnnouncementSource('demo');
-        deleteAnnouncement(announcementToDelete.id);
-        setEventAnnouncements((prev) =>
-          prev.filter((announcement) => announcement.id !== announcementToDelete.id)
-        );
-      } else {
-        setAnnouncementError(
-          error?.response?.data?.message ||
-            'Unable to delete this announcement.'
-        );
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    deleteAnnouncement(announcementToDelete.id);
     setAnnouncementToDelete(null);
   };
 
@@ -257,17 +133,6 @@ export default function OrganizerAnnouncementsPage() {
       </div>
 
       {/* Create Announcement Form Accordion */}
-      {announcementError && (
-        <div className="rounded-xl border border-red-100 bg-red-50/70 p-4 text-sm text-red-800">
-          <p>{announcementError}</p>
-          <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={refreshAnnouncements}>
-            Retry announcements
-          </Button>
-        </div>
-      )}
-
-      {isLoadingAnnouncements && <LoadingState label="Loading announcements..." />}
-
       {formOpen && (
         <form
           onSubmit={handleCreate}
@@ -278,7 +143,7 @@ export default function OrganizerAnnouncementsPage() {
               <Megaphone className="h-4 w-4 text-blue-600" />
               Compose Broadcast to Enrolled Participants
             </h2>
-            <span className="text-xs text-slate-400">            {announcementSource === 'live' ? 'Live Event Announcement' : 'Preview Session'}</span>
+            <span className="text-xs text-slate-400">Mock Session</span>
           </div>
 
           <FormField id="ann-title" label="Announcement Headline" error={errors.title} required>
@@ -345,9 +210,8 @@ export default function OrganizerAnnouncementsPage() {
               variant="primary"
               size="sm"
               icon={Send}
-              disabled={isSubmitting}
             >
-              {isSubmitting ? 'Publishing...' : 'Broadcast Announcement'}
+              Broadcast Announcement
             </Button>
           </div>
         </form>
@@ -445,7 +309,6 @@ export default function OrganizerAnnouncementsPage() {
         confirmLabel="Yes, Delete Announcement"
         cancelLabel="Keep Announcement"
         isDestructive={true}
-        isLoading={isSubmitting}
       />
     </div>
   );
