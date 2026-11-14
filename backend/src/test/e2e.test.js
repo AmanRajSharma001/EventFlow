@@ -9,30 +9,30 @@ test("EventFlow End-to-End Workflow & Final Backend Test Suite", async (t) => {
   let server;
   let baseUrl;
 
-  const organizer = {
+  let organizer = {
     id: "org-alpha-1",
     name: "Prof. Vikram Sen",
     email: "vikram@college.edu",
     role: ROLES.ORGANIZER
   };
 
-  const student = {
+  let student = {
     id: "std-beta-2",
     name: "Aman Student",
     email: "aman@college.edu",
     role: ROLES.STUDENT
   };
 
-  const admin = {
+  let admin = {
     id: "adm-gamma-3",
     name: "Principal Officer",
     email: "admin@college.edu",
     role: ROLES.ADMIN
   };
 
-  const organizerToken = generateToken(organizer);
-  const studentToken = generateToken(student);
-  const adminToken = generateToken(admin);
+  let organizerToken = generateToken(organizer);
+  let studentToken = generateToken(student);
+  let adminToken = generateToken(admin);
 
   await new Promise((resolve) => {
     server = app.listen(0, "127.0.0.1", () => {
@@ -41,6 +41,60 @@ test("EventFlow End-to-End Workflow & Final Backend Test Suite", async (t) => {
       resolve();
     });
   });
+
+  try {
+    const orgLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "organizer1@eventflow.test",
+        password: "Password@123"
+      })
+    });
+    if (orgLogin.status === 200) {
+      const orgData = await orgLogin.json();
+      if (orgData?.data?.token) {
+        organizerToken = orgData.data.token;
+        organizer = orgData.data.user;
+      }
+    }
+  } catch {}
+
+  try {
+    const stdLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "student1@eventflow.test",
+        password: "Password@123"
+      })
+    });
+    if (stdLogin.status === 200) {
+      const stdData = await stdLogin.json();
+      if (stdData?.data?.token) {
+        studentToken = stdData.data.token;
+        student = stdData.data.user;
+      }
+    }
+  } catch {}
+
+  try {
+    const admLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "admin@eventflow.test",
+        password: "Password@123"
+      })
+    });
+    if (admLogin.status === 200) {
+      const admData = await admLogin.json();
+      if (admData?.data?.token) {
+        adminToken = admData.data.token;
+        admin = admData.data.user;
+      }
+    }
+  } catch {}
 
   t.after(() => {
     return new Promise((resolve) => server.close(resolve));
@@ -69,7 +123,10 @@ test("EventFlow End-to-End Workflow & Final Backend Test Suite", async (t) => {
 
     assert.ok(res.status === 201 || res.status === 503);
     const body = await res.json();
-    if (res.status === 503) {
+    if (res.status === 201) {
+      assert.equal(body.success, true);
+      assert.ok(body.data?.event?.id);
+    } else if (res.status === 503) {
       assert.equal(body.data?.organizerId, organizer.id);
       assert.equal(body.data?.capacity, 200);
     }

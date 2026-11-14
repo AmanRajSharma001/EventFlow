@@ -10,30 +10,30 @@ test("EventFlow Event Management & Registration Test Suite", async (t) => {
   let server;
   let baseUrl;
 
-  const organizerUser = {
+  let organizerUser = {
     id: "org-101",
     name: "Dr. Sharma",
     email: "sharma@college.edu",
     role: ROLES.ORGANIZER
   };
 
-  const studentUser = {
+  let studentUser = {
     id: "std-202",
     name: "Aman Student",
     email: "student@college.edu",
     role: ROLES.STUDENT
   };
 
-  const adminUser = {
+  let adminUser = {
     id: "adm-303",
     name: "Dean Academic",
     email: "admin@college.edu",
     role: ROLES.ADMIN
   };
 
-  const organizerToken = generateToken(organizerUser);
-  const studentToken = generateToken(studentUser);
-  const adminToken = generateToken(adminUser);
+  let organizerToken = generateToken(organizerUser);
+  let studentToken = generateToken(studentUser);
+  let adminToken = generateToken(adminUser);
 
   await new Promise((resolve) => {
     server = app.listen(0, "127.0.0.1", () => {
@@ -42,6 +42,60 @@ test("EventFlow Event Management & Registration Test Suite", async (t) => {
       resolve();
     });
   });
+
+  try {
+    const orgLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "organizer1@eventflow.test",
+        password: "Password@123"
+      })
+    });
+    if (orgLogin.status === 200) {
+      const orgData = await orgLogin.json();
+      if (orgData?.data?.token) {
+        organizerToken = orgData.data.token;
+        organizerUser = orgData.data.user;
+      }
+    }
+  } catch {}
+
+  try {
+    const stdLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "student1@eventflow.test",
+        password: "Password@123"
+      })
+    });
+    if (stdLogin.status === 200) {
+      const stdData = await stdLogin.json();
+      if (stdData?.data?.token) {
+        studentToken = stdData.data.token;
+        studentUser = stdData.data.user;
+      }
+    }
+  } catch {}
+
+  try {
+    const admLogin = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "admin@eventflow.test",
+        password: "Password@123"
+      })
+    });
+    if (admLogin.status === 200) {
+      const admData = await admLogin.json();
+      if (admData?.data?.token) {
+        adminToken = admData.data.token;
+        adminUser = admData.data.user;
+      }
+    }
+  } catch {}
 
   t.after(() => {
     return new Promise((resolve) => server.close(resolve));
@@ -144,7 +198,11 @@ test("EventFlow Event Management & Registration Test Suite", async (t) => {
 
     assert.ok(res.status === 201 || res.status === 503);
     const body = await res.json();
-    if (res.status === 503) {
+    if (res.status === 201) {
+      assert.equal(body.success, true);
+      assert.ok(body.data.event.id);
+      assert.equal(body.data.event.title, "Machine Learning Boot Camp");
+    } else if (res.status === 503) {
       assert.equal(body.dependency?.teammate, "Sagar");
       assert.equal(body.data?.organizerId, organizerUser.id);
       assert.equal(body.data?.status, EVENT_STATUS.DRAFT);
@@ -271,5 +329,17 @@ test("EventFlow Event Management & Registration Test Suite", async (t) => {
       headers: { Authorization: `Bearer ${organizerToken}` }
     });
     assert.ok(resOrgMyEvents.status === 200 || resOrgMyEvents.status === 503);
+  });
+
+  await t.test("13. Registration cancellation and reactivation payload validates", async () => {
+    const cancelResult = cancelRegistrationSchema.safeParse({ reason: "Schedule change" });
+    assert.equal(cancelResult.success, true);
+
+    const reRegisterResult = registerForEventSchema.safeParse({
+      department: "Information Technology",
+      semester: "4th Semester",
+      notes: "Re-registering after schedule conflict resolved"
+    });
+    assert.equal(reRegisterResult.success, true);
   });
 });

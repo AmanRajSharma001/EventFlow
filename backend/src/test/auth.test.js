@@ -202,35 +202,60 @@ test("EventFlow Backend Auth & Foundation Test Suite", async (t) => {
     assert.equal(nextCalled4, true);
   });
 
-  await t.test("11. Database Dependency Status documented when Prisma integration is pending", async () => {
+  await t.test("11. Authentication Endpoints handle registration and login with dynamic credentials", async () => {
+    const uniqueEmail = `test_${Date.now()}_${Math.floor(Math.random() * 10000)}@college.edu`;
+    const password = "password123";
+
     const regRes = await fetch(`${baseUrl}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: "Aman Sharma",
-        email: "aman@college.edu",
-        password: "password123"
+        name: "Test Student",
+        email: uniqueEmail,
+        password
       })
     });
 
-    assert.equal(regRes.status, 503);
     const regBody = await regRes.json();
-    assert.equal(regBody.success, false);
-    assert.equal(regBody.dependency?.teammate, "Sagar");
-    assert.equal(regBody.data?.role, ROLES.STUDENT);
+    assert.ok(regRes.status === 201 || regRes.status === 503);
 
-    const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: "aman@college.edu",
-        password: "password123"
-      })
-    });
+    if (regRes.status === 201) {
+      assert.equal(regBody.success, true);
+      assert.equal(regBody.data.user.email, uniqueEmail.toLowerCase());
+      assert.equal(regBody.data.user.role, ROLES.STUDENT);
+      assert.ok(regBody.data.token);
 
-    assert.equal(loginRes.status, 503);
-    const loginBody = await loginRes.json();
-    assert.equal(loginBody.success, false);
-    assert.equal(loginBody.dependency?.teammate, "Sagar");
+      const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: uniqueEmail,
+          password
+        })
+      });
+
+      assert.equal(loginRes.status, 200);
+      const loginBody = await loginRes.json();
+      assert.equal(loginBody.success, true);
+      assert.equal(loginBody.data.user.email, uniqueEmail.toLowerCase());
+      assert.ok(loginBody.data.token);
+    } else {
+      assert.equal(regBody.success, false);
+      assert.equal(regBody.dependency?.teammate, "Sagar");
+
+      const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: uniqueEmail,
+          password
+        })
+      });
+
+      assert.equal(loginRes.status, 503);
+      const loginBody = await loginRes.json();
+      assert.equal(loginBody.success, false);
+      assert.equal(loginBody.dependency?.teammate, "Sagar");
+    }
   });
 });
