@@ -34,10 +34,10 @@ enum EventStatus {
 }
 
 // RegistrationStatus enum tracks whether an enrollment is active or cancelled.
-// - REGISTERED: Student is confirmed to attend the event.
+// - CONFIRMED: Student is confirmed to attend the event.
 // - CANCELLED: Student withdrew or organizer cancelled; status changes instead of deleting the row.
 enum RegistrationStatus {
-  REGISTERED
+  CONFIRMED
   CANCELLED
 }
 
@@ -91,8 +91,9 @@ model Event {
   // Detailed description of the event; @db.Text allows unlimited length text in PostgreSQL
   description String @db.Text
 
+  // Names match the backend API contract.
   // Physical location or hall on campus where the event will take place
-  venue String
+  location String
 
   // Optional category grouping (e.g., Technical, Cultural, Sports, Workshops)
   category String?
@@ -111,10 +112,13 @@ model Event {
   startDate DateTime
 
   // End date and time of the event
-  endDate DateTime
+  endDate DateTime?
 
   // Cut-off date and time after which registrations are closed
-  registrationDeadline DateTime
+  registrationDeadline DateTime?
+
+  // Timestamp when the event was officially published
+  publishedAt DateTime?
 
   // Maximum number of participants who can attend
   capacity Int
@@ -157,10 +161,17 @@ model Registration {
   qrToken String @unique @default(uuid())
 
   // Status of the registration; cancelling changes status instead of deleting the row to preserve history
-  status RegistrationStatus @default(REGISTERED)
+  status RegistrationStatus @default(CONFIRMED)
+
+  // Names match the backend API contract.
+  notes String?
+  department String?
+  semester String?
+  cancellationReason String?
+  cancelledAt DateTime?
 
   // Timestamp when the student submitted their registration
-  registeredAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
   // Relational link to the student User record
   student User @relation(fields: [studentId], references: [id])
