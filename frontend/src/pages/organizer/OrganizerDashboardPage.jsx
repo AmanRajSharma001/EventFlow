@@ -136,7 +136,7 @@ export default function OrganizerDashboardPage() {
             {weeklyTrend.map((item) => (
               <div key={item.week} className="group relative flex flex-1 flex-col items-center h-full justify-end">
                 {/* Tooltip on hover */}
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 rounded-md bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                <span className="ef-keep-dark opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 rounded-md bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
                   {item.count} regs
                 </span>
                 <div

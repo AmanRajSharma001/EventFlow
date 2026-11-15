@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useOrganizer } from '../../hooks/useOrganizer';
 import Button from '../common/Button';
+import ThemeToggle from '../common/ThemeToggle';
 
 export default function OrganizerLayout() {
   const { user, logout } = useAuth();
@@ -227,6 +228,8 @@ export default function OrganizerLayout() {
               <Menu className="h-5 w-5" />
             </button>
 
+            <ThemeToggle />
+
             <div>
               <nav aria-label="Breadcrumb" className="hidden sm:block">
                 <ol className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -259,6 +262,8 @@ export default function OrganizerLayout() {
             >
               New Event
             </Button>
+
+            <ThemeToggle />
 
             {/* Notification Popover */}
             <div className="relative">

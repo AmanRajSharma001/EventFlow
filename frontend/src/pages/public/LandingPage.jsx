@@ -179,7 +179,7 @@ export default function LandingPage() {
               type="button"
               aria-pressed={!showPastEvents}
               onClick={() => setShowPastEvents(false)}
-              className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${!showPastEvents ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${!showPastEvents ? 'ef-keep-dark bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               Upcoming
             </button>
@@ -187,7 +187,7 @@ export default function LandingPage() {
               type="button"
               aria-pressed={showPastEvents}
               onClick={() => setShowPastEvents(true)}
-              className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${showPastEvents ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${showPastEvents ? 'ef-keep-dark bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               Past events
             </button>
@@ -316,7 +316,7 @@ export default function LandingPage() {
               { step: '03', title: 'Keep a participation record', text: 'Build a useful history of the events you attend as the student experience grows.' },
             ].map((item) => (
               <article key={item.step} className="rounded-xl border border-slate-200 bg-slate-50/70 p-6 sm:p-7">
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-900 text-sm font-semibold text-white">{item.step}</span>
+                <span className="ef-keep-dark grid h-10 w-10 place-items-center rounded-lg bg-slate-900 text-sm font-semibold text-white">{item.step}</span>
                 <h3 className="mt-5 text-lg font-semibold tracking-tight text-slate-950">{item.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
               </article>
@@ -337,7 +337,7 @@ export default function LandingPage() {
               <Button as={Link} to="/register" variant="secondary">Create a preview account</Button>
             </div>
           </article>
-          <article className="flex flex-col rounded-2xl border border-slate-200 bg-slate-900 p-6 text-white sm:p-8">
+          <article className="ef-keep-dark flex flex-col rounded-2xl border border-slate-200 bg-slate-900 p-6 text-white sm:p-8 dark:border-[#273449]">
             <div className="grid h-11 w-11 place-items-center rounded-xl bg-white/10 text-white"><Check aria-hidden="true" className="h-5 w-5" /></div>
             <p className="mt-6 text-xs font-bold uppercase tracking-[0.14em] text-slate-300">For organizers</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight">A shared starting point for campus activities.</h2>

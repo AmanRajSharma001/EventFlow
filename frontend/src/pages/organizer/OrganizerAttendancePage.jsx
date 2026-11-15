@@ -146,7 +146,7 @@ export default function OrganizerAttendancePage() {
 
       {/* Interactive Demo Scanner Box (collapsible) */}
       {scannerActive && (
-        <div className="rounded-2xl border border-slate-200 bg-slate-900 p-6 text-white shadow-xl">
+        <div className="ef-keep-dark rounded-2xl border border-slate-200 bg-slate-900 p-6 text-white shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>
               <div className="flex items-center gap-2">

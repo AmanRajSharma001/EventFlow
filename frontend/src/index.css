@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================
    EventFlow Design System — Premium SaaS Aesthetic
@@ -228,4 +229,273 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============================================================
+   Dark mode overrides — placed outside @layer so they win over
+   Tailwind's defaults. The .dark class is toggled by ThemeProvider.
+   ============================================================ */
+.dark {
+  color-scheme: dark;
+
+  /* Surface & background */
+  --ef-bg: #0b1120;
+  --ef-bg-alt: #0f172a;
+  --ef-bg-subtle: #162033;
+
+  /* Borders */
+  --ef-border: #273449;
+  --ef-border-dark: #334155;
+
+  /* Text */
+  --ef-ink: #f1f5f9;
+  --ef-ink-80: #e2e8f0;
+  --ef-muted: #94a3b8;
+  --ef-subtle: #64748b;
+
+  /* Blue tints */
+  --ef-blue-light: #14213d;
+  --ef-blue-pale: #1e3a6e;
+  --ef-blue-dark: #93c5fd;
+
+  /* Semantic surface tints */
+  --ef-success-light: #0c2a22;
+  --ef-warning-light: #33260b;
+  --ef-danger-light: #33151a;
+
+  /* Legacy aliases */
+  --ef-line: #273449;
+  --ef-paper: #0f172a;
+  --ef-surface: #111a2e;
+
+  /* Focus ring */
+  --ef-focus: rgb(96 165 250 / 35%);
+
+  /* Remap slate scale (inverted for dark) */
+  --color-slate-50: #0f172a;
+  --color-slate-100: #162033;
+  --color-slate-200: #273449;
+  --color-slate-300: #334155;
+  --color-slate-400: #64748b;
+  --color-slate-500: #94a3b8;
+  --color-slate-600: #b6c2d4;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  /* Remap gray scale (same values as slate, some components use gray-*) */
+  --color-gray-50: #0f172a;
+  --color-gray-100: #162033;
+  --color-gray-200: #273449;
+  --color-gray-300: #334155;
+  --color-gray-400: #64748b;
+  --color-gray-500: #94a3b8;
+  --color-gray-600: #b6c2d4;
+  --color-gray-700: #cbd5e1;
+  --color-gray-800: #e2e8f0;
+  --color-gray-900: #f1f5f9;
+  --color-gray-950: #f8fafc;
+
+  /* Pale color tints for dark mode */
+  --color-blue-50: #14213d;
+  --color-blue-100: #172a4d;
+  --color-blue-200: #1e3a6e;
+  --color-blue-300: #2b4f94;
+
+  --color-indigo-50: #1b1f45;
+  --color-indigo-100: #232855;
+  --color-indigo-200: #3730a3;
+  --color-indigo-300: #4338ca;
+
+  --color-sky-50: #0c2a3d;
+  --color-sky-100: #0f3550;
+  --color-sky-200: #075985;
+  --color-sky-300: #0369a1;
+
+  --color-cyan-50: #0c2a3d;
+  --color-cyan-100: #0f3550;
+  --color-cyan-200: #075985;
+  --color-cyan-300: #0369a1;
+
+  --color-teal-50: #0c2a2e;
+  --color-teal-100: #0f3338;
+  --color-teal-200: #115e59;
+  --color-teal-300: #0f766e;
+
+  --color-emerald-50: #0c2a22;
+  --color-emerald-100: #0f3328;
+  --color-emerald-200: #14532d;
+  --color-emerald-300: #166534;
+
+  --color-green-50: #0c2a22;
+  --color-green-100: #0f3328;
+  --color-green-200: #14532d;
+  --color-green-300: #166534;
+
+  --color-lime-50: #2a2a0c;
+  --color-lime-100: #38370f;
+  --color-lime-200: #713f12;
+  --color-lime-300: #854d0e;
+
+  --color-yellow-50: #2a2a0c;
+  --color-yellow-100: #38370f;
+  --color-yellow-200: #713f12;
+  --color-yellow-300: #854d0e;
+
+  --color-amber-50: #33260b;
+  --color-amber-100: #422f0c;
+  --color-amber-200: #78350f;
+  --color-amber-300: #92400e;
+
+  --color-orange-50: #33260b;
+  --color-orange-100: #422f0c;
+  --color-orange-200: #78350f;
+  --color-orange-300: #92400e;
+
+  --color-red-50: #33151a;
+  --color-red-100: #3f1a20;
+  --color-red-200: #7f1d1d;
+  --color-red-300: #991b1b;
+
+  --color-rose-50: #33151a;
+  --color-rose-100: #3f1a20;
+  --color-rose-200: #7f1d1d;
+  --color-rose-300: #991b1b;
+
+  --color-pink-50: #33151a;
+  --color-pink-100: #3f1a20;
+  --color-pink-200: #7f1d1d;
+  --color-pink-300: #991b1b;
+
+  --color-purple-50: #231a3d;
+  --color-purple-100: #2b2050;
+  --color-purple-200: #4c1d95;
+  --color-purple-300: #5b21b6;
+
+  --color-violet-50: #231a3d;
+  --color-violet-100: #2b2050;
+  --color-violet-200: #4c1d95;
+  --color-violet-300: #5b21b6;
+
+  --color-fuchsia-50: #231a3d;
+  --color-fuchsia-100: #2b2050;
+  --color-fuchsia-200: #4c1d95;
+  --color-fuchsia-300: #5b21b6;
+
+  --color-stone-100: #162033;
+  --color-stone-200: #273449;
+  --color-stone-300: #334155;
+}
+
+/* bg-white override — components that use bg-white explicitly */
+.dark .bg-white {
+  background-color: #111a2e;
+}
+
+/* Keep white buttons white inside deliberately dark panels */
+.dark .ef-keep-dark .bg-white {
+  background-color: #ffffff;
+}
+
+/* Grid texture used on hero sections */
+.dark .ef-grid-bg {
+  background-color: #0b1120;
+  background-image:
+    linear-gradient(rgba(51, 65, 85, 0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51, 65, 85, 0.45) 1px, transparent 1px);
+}
+
+/* Text selection */
+.dark ::selection {
+  background: rgb(96 165 250 / 30%);
+}
+
+/* Restores original slate and gray palettes inside intentionally dark panels in dark mode */
+.dark .ef-keep-dark {
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+}
+
+/* Translucent sticky headers in dark mode */
+.dark .bg-white\/95 {
+  background-color: rgb(11 17 32 / 0.92);
+}
+
+/* High-contrast text colors for dark mode (replaces dark shades that are unreadable on dark backgrounds) */
+.dark .text-blue-700,
+.dark .text-blue-800 {
+  color: #93c5fd;
+}
+
+.dark .text-blue-900,
+.dark .text-blue-950 {
+  color: #bfdbfe;
+}
+
+.dark .text-indigo-700 {
+  color: #a5b4fc;
+}
+
+.dark .text-sky-700 {
+  color: #7dd3fc;
+}
+
+.dark .text-teal-700 {
+  color: #5eead4;
+}
+
+.dark .text-emerald-700,
+.dark .text-emerald-800,
+.dark .text-emerald-900,
+.dark .text-emerald-950 {
+  color: #6ee7b7;
+}
+
+.dark .text-amber-700,
+.dark .text-amber-800,
+.dark .text-amber-900,
+.dark .text-amber-950 {
+  color: #fcd34d;
+}
+
+.dark .text-orange-700 {
+  color: #fdba74;
+}
+
+.dark .text-red-700 {
+  color: #fca5a5;
+}
+
+.dark .text-rose-700 {
+  color: #fca5a5;
+}
+
+.dark .text-violet-700 {
+  color: #c4b5fd;
+}
+
+.dark .text-stone-600 {
+  color: #b6c2d4;
 }

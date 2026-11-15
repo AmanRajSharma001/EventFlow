@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { CalendarDays, LogOut, Menu, UserRound, X } from 'lucide-react';
 import Button from '../common/Button';
 import ApiStatusIndicator from '../common/ApiStatusIndicator';
+import ThemeToggle from '../common/ThemeToggle';
 import { useAuth } from '../../hooks/useAuth';
 
 const navigationLinks = [
@@ -160,6 +161,7 @@ export default function Navbar() {
         {/* Desktop actions */}
         <div className="hidden shrink-0 items-center gap-3 lg:flex">
           <ApiStatusIndicator />
+          <ThemeToggle />
           {accountActions}
         </div>
 
@@ -232,8 +234,9 @@ export default function Navbar() {
             );
           })}
           <div className="mt-2 border-t border-slate-100 pt-3 flex flex-col gap-3">
-            <div className="flex justify-start">
+            <div className="flex justify-between items-center">
               <ApiStatusIndicator />
+              <ThemeToggle />
             </div>
             {accountActions}
           </div>
