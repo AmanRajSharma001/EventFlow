@@ -94,11 +94,11 @@ export default function TicketModal({ isOpen, onClose, ticket }) {
               </p>
             </div>
 
-            <div className="shrink-0 text-left sm:text-right">
+            <div className="min-w-0 max-w-full text-left sm:text-right">
               <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 Ticket Pass ID
               </span>
-              <span className="mt-0.5 inline-block font-mono text-base font-bold text-blue-600 sm:text-lg">
+              <span className="mt-0.5 inline-block min-w-0 max-w-full break-all font-mono text-xs font-bold text-blue-600 sm:text-sm">
                 {ticket.ticketNumber}
               </span>
             </div>
