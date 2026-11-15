@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import Button from '../common/Button';
+import ThemeToggle from '../common/ThemeToggle';
 
 const sidebarNavigation = [
   { name: 'Overview', to: '/student/dashboard', icon: LayoutDashboard },
@@ -187,6 +188,8 @@ export default function StudentLayout() {
               <Menu className="h-5 w-5" />
             </button>
 
+            <ThemeToggle />
+
             <div>
               <nav aria-label="Breadcrumb" className="hidden sm:block">
                 <ol className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -219,6 +222,8 @@ export default function StudentLayout() {
             >
               Explore Events
             </Button>
+
+            <ThemeToggle />
 
             {/* Notification Dropdown Button */}
             <div className="relative">

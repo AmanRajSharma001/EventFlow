@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useAdmin } from '../../hooks/useAdmin';
 import Button from '../common/Button';
+import ThemeToggle from '../common/ThemeToggle';
 
 const adminNavigation = [
   { name: 'Overview', to: '/admin/dashboard', icon: LayoutDashboard },
@@ -222,6 +223,8 @@ export default function AdminLayout() {
               <Menu className="h-5 w-5" />
             </button>
 
+            <ThemeToggle />
+
             <div>
               <nav aria-label="Breadcrumb" className="hidden sm:block">
                 <ol className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -254,6 +257,8 @@ export default function AdminLayout() {
             >
               Reset Mock State
             </Button>
+
+            <ThemeToggle />
 
             {/* Notification Popover */}
             <div className="relative">
