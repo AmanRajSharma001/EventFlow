@@ -212,7 +212,7 @@ export default function EventForm({
                     onError={() => setImagePreviewFailed(true)}
                     className="h-full w-full object-cover"
                   />
-                  <span className="absolute bottom-2 left-2 rounded-md bg-slate-900/80 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-xs">
+                  <span className="ef-keep-dark absolute bottom-2 left-2 rounded-md bg-slate-900/80 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-xs">
                     Live Cover Preview
                   </span>
                 </div>

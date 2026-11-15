@@ -84,7 +84,7 @@ export default function LoginPage() {
 
       <section className="mx-auto w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <div className="text-center">
-          <div className="mx-auto grid h-11 w-11 place-items-center rounded-xl bg-slate-900 text-white lg:hidden"><LockKeyhole aria-hidden="true" className="h-5 w-5" /></div>
+          <div className="ef-keep-dark mx-auto grid h-11 w-11 place-items-center rounded-xl bg-slate-900 text-white lg:hidden"><LockKeyhole aria-hidden="true" className="h-5 w-5" /></div>
           <p className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-blue-700 lg:mt-0">Preview sign-in</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Welcome back</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">Choose a role and enter any preview credentials to continue.</p>

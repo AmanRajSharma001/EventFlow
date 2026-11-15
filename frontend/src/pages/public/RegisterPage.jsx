@@ -98,7 +98,7 @@ export default function RegisterPage() {
 
       <section className="mx-auto w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <div className="flex items-start gap-3 border-b border-slate-100 pb-5">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-900 text-white"><GraduationCap aria-hidden="true" className="h-5 w-5" /></span>
+          <span className="ef-keep-dark grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-900 text-white"><GraduationCap aria-hidden="true" className="h-5 w-5" /></span>
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">Create a student profile</h2>
             <p className="mt-1 text-sm leading-5 text-slate-600">Fields marked with <span className="font-semibold text-rose-700">*</span> are required.</p>

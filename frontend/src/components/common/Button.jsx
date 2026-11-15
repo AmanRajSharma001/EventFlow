@@ -2,7 +2,7 @@ import { LoaderCircle } from 'lucide-react';
 
 const variants = {
   primary:
-    'border border-blue-600 bg-blue-600 text-white shadow-sm hover:bg-blue-700 hover:border-blue-700 active:bg-blue-800 focus-visible:ring-blue-600',
+    'ef-keep-dark border border-blue-600 bg-blue-600 text-white shadow-sm hover:bg-blue-700 hover:border-blue-700 active:bg-blue-800 focus-visible:ring-blue-600',
   secondary:
     'border border-slate-200 bg-white text-slate-800 shadow-sm hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100 focus-visible:ring-slate-400',
   outline:
@@ -12,7 +12,7 @@ const variants = {
   danger:
     'border border-red-600 bg-red-600 text-white shadow-sm hover:bg-red-700 hover:border-red-700 active:bg-red-800 focus-visible:ring-red-600',
   accent:
-    'border border-slate-900 bg-slate-900 text-white shadow-sm hover:bg-slate-800 hover:border-slate-800 active:bg-slate-950 focus-visible:ring-slate-900',
+    'ef-keep-dark border border-slate-900 bg-slate-900 text-white shadow-sm hover:bg-slate-800 hover:border-slate-800 active:bg-slate-950 focus-visible:ring-slate-900',
 };
 
 const sizes = {

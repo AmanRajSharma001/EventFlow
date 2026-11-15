@@ -6,7 +6,7 @@ const footerLinkClass = 'rounded-sm transition-colors hover:text-white focus-vis
 
 export default function Footer() {
   return (
-    <footer className="border-t border-slate-800 bg-slate-950 text-slate-300 dark:border-slate-800 dark:bg-slate-900">
+    <footer className="ef-keep-dark border-t border-slate-800 bg-slate-950 text-slate-300">
       <div className="ef-container py-11 sm:py-14">
         <div className="grid gap-9 sm:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_1fr] lg:gap-12">
           <div className="max-w-sm">

@@ -8,7 +8,7 @@ export default function Badge({
     default: 'bg-slate-100 text-slate-700 border-slate-200',
     blue: 'bg-blue-50 text-blue-700 border-blue-200',
     indigo: 'bg-sky-50 text-sky-700 border-sky-200',
-    navy: 'bg-slate-900 text-white border-slate-900',
+    navy: 'ef-keep-dark bg-slate-900 text-white border-slate-900',
     success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     amber: 'bg-amber-50 text-amber-700 border-amber-200',
     orange: 'bg-orange-50 text-orange-700 border-orange-200',
