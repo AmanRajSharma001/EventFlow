@@ -11,7 +11,7 @@ export default function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="grid h-9 w-9 place-items-center rounded-lg text-slate-600 outline-none transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+      className="grid h-9 w-9 place-items-center rounded-lg text-slate-600 outline-none transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-400 dark:hover:bg-blue-800 dark:hover:text-blue-100"
     >
       {isDark ? (
         <Sun aria-hidden="true" className="h-4.5 w-4.5" />
