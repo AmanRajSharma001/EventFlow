@@ -7,6 +7,7 @@ import {
   Megaphone,
   Plus,
   TrendingUp,
+  UserCheck,
   Users,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
