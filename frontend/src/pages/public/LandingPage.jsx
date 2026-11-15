@@ -337,7 +337,7 @@ export default function LandingPage() {
               <Button as={Link} to="/register" variant="secondary">Create a preview account</Button>
             </div>
           </article>
-          <article className="flex flex-col rounded-2xl border border-slate-200 bg-slate-900 p-6 text-white sm:p-8">
+          <article className="flex flex-col rounded-2xl border border-slate-200 bg-slate-900 p-6 text-white sm:p-8 dark:border-slate-800 dark:bg-slate-800">
             <div className="grid h-11 w-11 place-items-center rounded-xl bg-white/10 text-white"><Check aria-hidden="true" className="h-5 w-5" /></div>
             <p className="mt-6 text-xs font-bold uppercase tracking-[0.14em] text-slate-300">For organizers</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight">A shared starting point for campus activities.</h2>

@@ -126,7 +126,7 @@ export default function Navbar() {
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/80">
       <div className="ef-container flex h-16 items-center justify-between gap-4">
         {/* Logo */}
         <Link
@@ -186,7 +186,7 @@ export default function Navbar() {
       <div
         id="mobile-navigation"
         hidden={!isMobileMenuOpen}
-        className="border-t border-slate-200 bg-white lg:hidden"
+        className="border-t border-slate-200 bg-white lg:hidden dark:border-slate-800 dark:bg-slate-950"
       >
         <nav aria-label="Mobile navigation" className="ef-container flex flex-col gap-1 py-3">
           {isAuthenticated && user?.role === 'student' && (
