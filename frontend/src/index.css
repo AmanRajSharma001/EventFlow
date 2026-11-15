@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================
    EventFlow Design System — Premium SaaS Aesthetic
@@ -228,4 +229,89 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============================================================
+   Dark mode overrides — placed outside @layer so they win over
+   Tailwind's defaults. The .dark class is toggled by ThemeProvider.
+   ============================================================ */
+.dark {
+  color-scheme: dark;
+
+  /* Surface & background */
+  --ef-bg: #0b1120;
+  --ef-bg-alt: #0f172a;
+  --ef-bg-subtle: #162033;
+
+  /* Borders */
+  --ef-border: #273449;
+  --ef-border-dark: #334155;
+
+  /* Text */
+  --ef-ink: #f1f5f9;
+  --ef-ink-80: #e2e8f0;
+  --ef-muted: #94a3b8;
+  --ef-subtle: #64748b;
+
+  /* Blue tints */
+  --ef-blue-light: #14213d;
+  --ef-blue-pale: #1e3a6e;
+  --ef-blue-dark: #93c5fd;
+
+  /* Semantic surface tints */
+  --ef-success-light: #0c2a22;
+  --ef-warning-light: #33260b;
+  --ef-danger-light: #33151a;
+
+  /* Legacy aliases */
+  --ef-line: #273449;
+  --ef-paper: #0f172a;
+  --ef-surface: #111a2e;
+
+  /* Focus ring */
+  --ef-focus: rgb(96 165 250 / 35%);
+
+  /* Remap slate scale (inverted for dark) */
+  --color-slate-50: #0f172a;
+  --color-slate-100: #162033;
+  --color-slate-200: #273449;
+  --color-slate-300: #334155;
+  --color-slate-400: #64748b;
+  --color-slate-500: #94a3b8;
+  --color-slate-600: #b6c2d4;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  /* Remap gray scale (same values as slate, some components use gray-*) */
+  --color-gray-50: #0f172a;
+  --color-gray-100: #162033;
+  --color-gray-200: #273449;
+  --color-gray-300: #334155;
+  --color-gray-400: #64748b;
+  --color-gray-500: #94a3b8;
+  --color-gray-600: #b6c2d4;
+  --color-gray-700: #cbd5e1;
+  --color-gray-800: #e2e8f0;
+  --color-gray-900: #f1f5f9;
+  --color-gray-950: #f8fafc;
+}
+
+/* bg-white override — components that use bg-white explicitly */
+.dark .bg-white {
+  background-color: #111a2e;
+}
+
+/* Grid texture used on hero sections */
+.dark .ef-grid-bg {
+  background-color: #0b1120;
+  background-image:
+    linear-gradient(rgba(51, 65, 85, 0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51, 65, 85, 0.45) 1px, transparent 1px);
+}
+
+/* Text selection */
+.dark ::selection {
+  background: rgb(96 165 250 / 30%);
 }

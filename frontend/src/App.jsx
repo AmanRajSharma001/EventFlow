@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { OrganizerProvider } from './context/OrganizerContext';
 import { AdminProvider } from './context/AdminContext';
+import { ThemeProvider } from './context/ThemeContext';
 import PublicLayout from './layouts/PublicLayout';
 import LandingPage from './pages/public/LandingPage';
 import EventsPage from './pages/public/EventsPage';
@@ -99,12 +100,22 @@ export default function App() {
   const Router = typeof window !== 'undefined' && window.location.protocol === 'file:' ? HashRouter : BrowserRouter;
 
   return (
-    <AuthProvider>
-      <OrganizerProvider>
-        <AdminProvider>
-          <Router>
-            <RouteScrollManager />
-            <Toaster position="top-right" />
+    <ThemeProvider>
+      <AuthProvider>
+        <OrganizerProvider>
+          <AdminProvider>
+            <Router>
+              <RouteScrollManager />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  style: {
+                    background: 'var(--ef-bg)',
+                    color: 'var(--ef-ink)',
+                    border: '1px solid var(--ef-border)',
+                  },
+                }}
+              />
 
             <Routes>
               {/* Public Routes */}
@@ -187,5 +198,6 @@ export default function App() {
         </AdminProvider>
       </OrganizerProvider>
     </AuthProvider>
+  </ThemeProvider>
   );
 }
