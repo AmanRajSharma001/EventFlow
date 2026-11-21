@@ -1,0 +1,79 @@
+erDiagram
+    %% =========================================================================
+    %% EVENTFLOW — DATABASE ENTITY RELATIONSHIP (ER) DIAGRAM
+    %% Source: backend/prisma/schema.prisma & PostgreSQL public schema
+    %% =========================================================================
+
+    User ||--o{ Event : "organizes (1:N)"
+    User ||--o{ Registration : "registers (1:N)"
+    Event ||--o{ Registration : "has enrollments (1:N)"
+    Registration ||--o| Attendance : "verified by (1:1)"
+    Event ||--o{ Announcement : "broadcasts (1:N)"
+    User ||--o{ Announcement : "authors (1:N)"
+
+    User {
+        string id PK "UUID"
+        string name "Full Name"
+        string email UK "Unique Institutional Email"
+        string password "Bcrypt Hash"
+        Role role "STUDENT | ORGANIZER | ADMIN"
+        string rollNumber "University Roll Number (URN)"
+        string department "Academic Department"
+        string semester "Current Semester"
+        string phone "Contact Mobile Number"
+        datetime createdAt "Record Creation Timestamp"
+        datetime updatedAt "Auto-updated Timestamp"
+    }
+
+    Event {
+        string id PK "UUID"
+        string title "Event Headline"
+        string description "Detailed Event Content"
+        string location "Campus Venue / Hall"
+        string category "Event Classification"
+        string imageUrl "Cover Banner Image URL"
+        string department "Hosting Department / Society"
+        string coordinator "Faculty / Student Coordinator"
+        boolean featured "Homepage Showcase Flag"
+        string price "Ticket Pricing / Free"
+        string_array tags "PostgreSQL TEXT[] Array"
+        datetime startDate "Event Start Timestamp"
+        datetime endDate "Event Concluding Timestamp"
+        datetime registrationDeadline "Registration Cut-off Timestamp"
+        datetime publishedAt "Official Publication Timestamp"
+        int capacity "Maximum Allowed Participant Seats"
+        EventStatus status "DRAFT | PUBLISHED | CANCELLED | COMPLETED"
+        string organizerId FK "References User.id"
+        datetime createdAt "Record Creation Timestamp"
+        datetime updatedAt "Auto-updated Timestamp"
+    }
+
+    Registration {
+        string id PK "UUID"
+        string studentId FK "References User.id"
+        string eventId FK "References Event.id"
+        string qrToken UK "Unique HMAC Ticket Pass Token"
+        RegistrationStatus status "CONFIRMED | CANCELLED"
+        string notes "Special Requests / Motivation"
+        string department "Student Academic Department"
+        string semester "Student Current Semester"
+        string cancellationReason "Withdrawal Reason Note"
+        datetime cancelledAt "Timestamp of Cancellation"
+        datetime createdAt "Registration Submission Timestamp"
+    }
+
+    Attendance {
+        string id PK "UUID"
+        string registrationId FK,UK "References Registration.id (Unique 1:1)"
+        datetime checkedInAt "Venue Entry Verification Timestamp"
+    }
+
+    Announcement {
+        string id PK "UUID"
+        string eventId FK "References Event.id"
+        string creatorId FK "References User.id"
+        string title "Announcement Headline"
+        string message "Detailed Message / Schedule Update"
+        datetime createdAt "Broadcast Timestamp"
+        datetime updatedAt "Auto-updated Timestamp"
+    }
